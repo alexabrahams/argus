@@ -15,6 +15,7 @@ from ._config import (
     LZ4_N_PARALLEL,
     LZ4_MINSZ_PARALLEL,
     BENCHMARK_MODE,
+    ENABLE_PARALLEL
 )  # noqa # pylint: disable=unused-import
 
 logger = logging.getLogger(__name__)

@@ -1,8 +1,7 @@
 import inspect
 import struct
 import time
-from datetime import datetime
-from datetime import datetime as dt, timedelta as dtd
+from datetime import datetime, datetime as dt, timedelta as dtd
 
 import bson
 import numpy as np
@@ -22,12 +21,11 @@ from argus._util import mongo_count, get_fwptr_config
 from argus.date import DateRange
 from argus.date._mktz import mktz
 from argus.exceptions import NoDataFoundException, DuplicateSnapshotException, ArgusException
-from argus.store import _version_store_utils
-from argus.store import version_store
+from argus.store import _version_store_utils, version_store
 from tests.unit.serialization.serialization_test_data import _mixed_test_data
-from ...util import read_str_as_pandas
-from ..test_utils import enable_profiling_for_library
 from tests.util import assert_frame_equal_
+from ..test_utils import enable_profiling_for_library
+from ...util import read_str_as_pandas
 
 ts1 = read_str_as_pandas(
     """         times | near
@@ -54,7 +52,6 @@ ts1_append = read_str_as_pandas(
                    2012-11-08 17:06:11.040 |  3.0
                    2012-11-09 17:06:11.040 |  3.0"""
 )
-
 
 symbol = "TS1"
 
@@ -112,7 +109,7 @@ def _query(allow_secondary, library_name):
 
 def test_store_item_new_version(library, library_name):
     with patch("pymongo.message.query", side_effect=_query(False, library_name)), patch(
-        "pymongo.server_description.ServerDescription.server_type", SERVER_TYPE.Mongos
+            "pymongo.server_description.ServerDescription.server_type", SERVER_TYPE.Mongos
     ):
         library.write(symbol, ts1)
         coll = library._collection
@@ -128,7 +125,7 @@ def test_store_item_new_version(library, library_name):
 @pytest.mark.xfail(reason="mongo/pymongo codepaths have changed, query no longer called for this")
 def test_store_item_read_preference(library_secondary, library_name):
     with patch("argus.argus.ArgusLibraryBinding.check_quota"), patch(
-        "pymongo.message.query", side_effect=_query(False, library_name)
+            "pymongo.message.query", side_effect=_query(False, library_name)
     ) as query, patch("pymongo.server_description.ServerDescription.server_type", SERVER_TYPE.Mongos):
         # write an item
         library_secondary.write(symbol, ts1)
@@ -145,7 +142,7 @@ def test_read_item_read_preference_SECONDARY(library_secondary, library_name):
     # write an item
     library_secondary.write(symbol, ts1)
     with patch("pymongo.message.query", side_effect=_query(True, library_name)) as query, patch(
-        "pymongo.server_description.ServerDescription.server_type", SERVER_TYPE.Mongos
+            "pymongo.server_description.ServerDescription.server_type", SERVER_TYPE.Mongos
     ):
         library_secondary.read(symbol)
     assert query.call_count > 0
@@ -161,8 +158,8 @@ def _test_query_falls_back_to_primary(library_secondary, library_name, fw_pointe
             # We should attempt a call to primary only subsequently.
             # In newer MongoDBs we query <database>.$cmd rather than <database>.<collection>
             if (
-                args[0].startswith("argus_{}.".format(library_name.split(".")[0]))
-                and bool(options & _QUERY_OPTIONS["slave_okay"]) == True
+                    args[0].startswith("argus_{}.".format(library_name.split(".")[0]))
+                    and bool(options & _QUERY_OPTIONS["slave_okay"]) == True
             ):
                 allow_secondary[0] = False
                 raise OperationFailure("some_error")
@@ -170,7 +167,7 @@ def _test_query_falls_back_to_primary(library_secondary, library_name, fw_pointe
 
         library_secondary.write(symbol, ts1)
         with patch("pymongo.message.query", side_effect=_query), patch(
-            "pymongo.server_description.ServerDescription.server_type", SERVER_TYPE.Mongos
+                "pymongo.server_description.ServerDescription.server_type", SERVER_TYPE.Mongos
         ):
             assert library_secondary.read(symbol) is not None
         # We raised at least once on a secondary read
@@ -456,9 +453,9 @@ def test_list_version_latest_only(library):
 
     versions = list(library.list_versions(symbol))
     for i, x in enumerate(
-        [
-            4,
-        ]
+            [
+                4,
+            ]
     ):
         assert versions[i]["symbol"] == symbol
         assert versions[i]["date"] >= dates[i]
@@ -1006,26 +1003,26 @@ def test_prunes_previous_version_append_interaction(library, fw_pointers_cfg):
         ts6 = ts3
         now = dt.utcnow()
         with patch(
-            "bson.ObjectId",
-            return_value=bson.ObjectId.from_datetime(now - dtd(minutes=130)),
-            from_datetime=bson.ObjectId.from_datetime,
+                "bson.ObjectId",
+                return_value=bson.ObjectId.from_datetime(now - dtd(minutes=130)),
+                from_datetime=bson.ObjectId.from_datetime,
         ):
             library.write(symbol, ts, prune_previous_version=False)
         assert_frame_equal_(ts, library.read(symbol).data)
 
         with patch(
-            "bson.ObjectId",
-            return_value=bson.ObjectId.from_datetime(now - dtd(minutes=129)),
-            from_datetime=bson.ObjectId.from_datetime,
+                "bson.ObjectId",
+                return_value=bson.ObjectId.from_datetime(now - dtd(minutes=129)),
+                from_datetime=bson.ObjectId.from_datetime,
         ):
             library.write(symbol, ts2, prune_previous_version=False)
         assert_frame_equal_(ts, library.read(symbol, as_of=1).data)
         assert_frame_equal_(ts2, library.read(symbol).data)
 
         with patch(
-            "bson.ObjectId",
-            return_value=bson.ObjectId.from_datetime(now - dtd(minutes=128)),
-            from_datetime=bson.ObjectId.from_datetime,
+                "bson.ObjectId",
+                return_value=bson.ObjectId.from_datetime(now - dtd(minutes=128)),
+                from_datetime=bson.ObjectId.from_datetime,
         ):
             library.write(symbol, ts3, prune_previous_version=False)
         assert_frame_equal_(ts, library.read(symbol, as_of=1).data)
@@ -1033,9 +1030,9 @@ def test_prunes_previous_version_append_interaction(library, fw_pointers_cfg):
         assert_frame_equal_(ts3, library.read(symbol).data)
 
         with patch(
-            "bson.ObjectId",
-            return_value=bson.ObjectId.from_datetime(now - dtd(minutes=127)),
-            from_datetime=bson.ObjectId.from_datetime,
+                "bson.ObjectId",
+                return_value=bson.ObjectId.from_datetime(now - dtd(minutes=127)),
+                from_datetime=bson.ObjectId.from_datetime,
         ):
             library.write(symbol, ts4, prune_previous_version=False)
         assert_frame_equal_(ts, library.read(symbol, as_of=1).data)
@@ -1044,9 +1041,9 @@ def test_prunes_previous_version_append_interaction(library, fw_pointers_cfg):
         assert_frame_equal_(ts4, library.read(symbol).data)
 
         with patch(
-            "bson.ObjectId",
-            return_value=bson.ObjectId.from_datetime(now - dtd(minutes=126)),
-            from_datetime=bson.ObjectId.from_datetime,
+                "bson.ObjectId",
+                return_value=bson.ObjectId.from_datetime(now - dtd(minutes=126)),
+                from_datetime=bson.ObjectId.from_datetime,
         ):
             library.write(symbol, ts5, prune_previous_version=False)
         assert_frame_equal_(ts, library.read(symbol, as_of=1).data)
@@ -1056,7 +1053,8 @@ def test_prunes_previous_version_append_interaction(library, fw_pointers_cfg):
         assert_frame_equal_(ts5, library.read(symbol).data)
 
         with patch(
-            "bson.ObjectId", return_value=bson.ObjectId.from_datetime(now), from_datetime=bson.ObjectId.from_datetime
+                "bson.ObjectId", return_value=bson.ObjectId.from_datetime(now),
+                from_datetime=bson.ObjectId.from_datetime
         ):
             library.write(symbol, ts6, prune_previous_version=True)
 
@@ -1190,7 +1188,7 @@ def test_append_after_empty(library, fw_pointers_cfg):
         library.write(symbol, df.iloc[:0])
 
         for i in range(len_df):
-            library.append(symbol, df.iloc[i : i + 1])
+            library.append(symbol, df.iloc[i: i + 1])
         r = library.read(symbol)
         assert_frame_equal_(df, r.data)
 
@@ -1628,7 +1626,8 @@ def test_append_does_not_duplicate_data_when_prune_fails(library, fw_pointers_cf
         library.write(symbol, ts1)
 
         with patch.object(
-            argus.store.version_store.VersionStore, "_prune_previous_versions", autospec=True, side_effect=side_effect
+                argus.store.version_store.VersionStore, "_prune_previous_versions", autospec=True,
+                side_effect=side_effect
         ):
             library.append(symbol, new_data)
 
@@ -1644,7 +1643,8 @@ def test_write_does_not_succeed_with_a_prune_error(library, fw_pointers_cfg):
         library.write(symbol, ts1)
 
         with patch.object(
-            argus.store.version_store.VersionStore, "_prune_previous_versions", autospec=True, side_effect=side_effect
+                argus.store.version_store.VersionStore, "_prune_previous_versions", autospec=True,
+                side_effect=side_effect
         ):
             with pytest.raises(ValueError):
                 library.write(symbol, ts1)
@@ -1859,7 +1859,7 @@ def test_fwpointers_mixed_scenarios(library, write_cfg, read_cfg, append_cfg, re
     symbol = "sym/{}/{}/{}/{}".format(write_cfg, read_cfg, append_cfg, reread_cfg)
     mydf = _mixed_test_data()["small"][0]
     to_write = mydf[: len(mydf) // 2]
-    to_append = mydf[len(mydf) // 2 :]
+    to_append = mydf[len(mydf) // 2:]
 
     with patch("argus.store._ndarray_store.NdarrayStore.check_written") as mock_check_written:
         mock_check_written.side_effect = _mock_check_written
@@ -1894,7 +1894,7 @@ def test_fwpointers_writemetadata_enabled_disabled(library):
 
     mydf = _mixed_test_data()["small"][0]
     to_write_a = mydf[: len(mydf) // 2]
-    to_write_b = mydf[len(mydf) // 2 :]
+    to_write_b = mydf[len(mydf) // 2:]
 
     with FwPointersCtx(FwPointersCfg.ENABLED):
         library.write(symbol=symbol, data=to_write_a)
@@ -1937,7 +1937,7 @@ def test_fwpointer_enabled_write_delete_keep_version_append(library):
 
     mydf = _mixed_test_data()["small"][0]
     to_write_a = mydf[: len(mydf) // 2]
-    to_write_b = mydf[len(mydf) // 2 :]
+    to_write_b = mydf[len(mydf) // 2:]
 
     with FwPointersCtx(FwPointersCfg.ENABLED):
         library.write(symbol=symbol, data=to_write_a)
@@ -1974,8 +1974,8 @@ def test_version_argus_version(argus):
 def test_prune_mixed_fwpointer_configs(library):
     mydf = _mixed_test_data()["large"][0]
     to_write_a = mydf[: len(mydf) // 3]
-    to_write_b = mydf[len(mydf) // 3 : 2 * len(mydf) // 3]
-    to_write_c = mydf[2 * len(mydf) // 3 :]
+    to_write_b = mydf[len(mydf) // 3: 2 * len(mydf) // 3]
+    to_write_c = mydf[2 * len(mydf) // 3:]
 
     with FwPointersCtx(FwPointersCfg.DISABLED):
         library.write(symbol, to_write_a)
@@ -2010,8 +2010,8 @@ def test_prune_mixed_fwpointer_configs(library):
 def test_prune_crossref_fwpointer_configs(library, first_write_cfg, second_write_cfg):
     mydf = _mixed_test_data()["large"][0]
     to_write_a = mydf[: len(mydf) // 3]
-    to_write_b = mydf[len(mydf) // 3 : 2 * len(mydf) // 3]
-    to_write_c = mydf[2 * len(mydf) // 3 :]
+    to_write_b = mydf[len(mydf) // 3: 2 * len(mydf) // 3]
+    to_write_c = mydf[2 * len(mydf) // 3:]
 
     to_write_a_b = pd.concat((to_write_a, to_write_b))
     to_write_b_c = pd.concat((to_write_b, to_write_c))

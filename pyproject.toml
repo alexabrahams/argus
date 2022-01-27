@@ -20,7 +20,7 @@ authors = ["Alex Abrahams"]
 python = ">=3.8,<3.9"
 pandas = "^1.4.0"
 numpy = "^1.22.1"
-pymongo = "^4.0.1"
+pymongo = "^3.11.0"
 decorator = "^5.1.1"
 enum-compat = "^0.0.3"
 mock = "^4.0.3"

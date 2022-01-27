@@ -1,24 +1,25 @@
 import logging
-import os
 import signal
 import subprocess
 import traceback
-import time
-import psutil
 
+import psutil
 from retry import retry
 
-from .config import CONFIG
 from .base import ProcessReader
 from .common import ServerClass, is_debug
 
 log = logging.getLogger(__name__)
 
-
 # ThreadServer will attempt to kill all child processes recursively.
 KILL_RETRY_COUNT = 15  # Total retry count to kill if not all child processes are terminated.
 KILL_RETRY_WAIT_SECS = 1  # Wait time between two retries
 KILL_WAIT_SECS = 5  # Time to wait for processes to terminate in a single retry.
+
+try:
+    SIG_KILL = signal.SIGKILL
+except AttributeError:
+    SIG_KILL = signal.SIGINT
 
 
 class ProcessStillRunningException(Exception):
@@ -42,7 +43,7 @@ def _kill_all(procs, sig):
     raise ProcessStillRunningException()
 
 
-def _kill_proc_tree(pid, sig=signal.SIGKILL, timeout=None):
+def _kill_proc_tree(pid, sig=SIG_KILL, timeout=None):
     parent = psutil.Process(pid)
     children = parent.children(recursive=True)
     children.append(parent)
@@ -74,7 +75,11 @@ class ThreadServer(ServerClass):
             extra_args["stdout"] = subprocess.PIPE
             extra_args["stderr"] = subprocess.PIPE
 
-        self._proc = subprocess.Popen(run_cmd, env=self._env, cwd=self._cwd, **extra_args)
+        print(run_cmd)
+        print(self._env)
+        print(self._cwd)
+
+        self._proc = subprocess.Popen(run_cmd) #, env=self._env, cwd=self._cwd
         log.debug("Running server: %s" % " ".join(run_cmd))
         log.debug("CWD: %s" % self._cwd)
 

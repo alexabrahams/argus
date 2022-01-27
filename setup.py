@@ -19,13 +19,8 @@
 import logging
 import sys
 
-from setuptools import find_packages
-from setuptools import setup
+from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
-
-long_description_content_type = "text/markdown"
-long_description = open("README.md").read()
-changelog = open("CHANGES.md").read()
 
 
 class PyTest(TestCommand):

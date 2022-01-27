@@ -1,26 +1,14 @@
+import logging
 import warnings
-import socket
+
+import pytest
+
+from .base2 import TestServerV2
+from .config import yield_requires_config, CONFIG
 
 warnings.simplefilter("error", DeprecationWarning)
 
 pytest_plugins = ["argus.fixtures.argus"]
-
-
-import os
-import tempfile
-import shutil
-import subprocess
-import time
-import errno
-import logging
-import getpass
-
-import pytest
-
-from pytest_fixture_config import yield_requires_config
-
-from .base2 import TestServerV2
-from .config import CONFIG
 
 log = logging.getLogger(__name__)
 
@@ -39,7 +27,7 @@ def _mongo_server():
         test_server.teardown()
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 @yield_requires_config(CONFIG, ["mongo_bin"])
 def mongo_server():
     """Function-scoped MongoDB server started in a local thread.
@@ -56,7 +44,7 @@ def mongo_server():
         yield server
 
 
-@pytest.yield_fixture(scope="session")
+@pytest.fixture(scope="session")
 @yield_requires_config(CONFIG, ["mongo_bin"])
 def mongo_server_sess():
     """Same as mongo_server fixture, scoped as session instead."""
@@ -64,7 +52,7 @@ def mongo_server_sess():
         yield server
 
 
-@pytest.yield_fixture(scope="class")
+@pytest.fixture(scope="class")
 @yield_requires_config(CONFIG, ["mongo_bin"])
 def mongo_server_cls(request):
     """Same as mongo_server fixture, scoped for test classes."""
@@ -73,7 +61,7 @@ def mongo_server_cls(request):
         yield server
 
 
-@pytest.yield_fixture(scope="module")
+@pytest.fixture(scope="module")
 @yield_requires_config(CONFIG, ["mongo_bin"])
 def mongo_server_module():
     """Same as mongo_server fixture, scoped for test modules."""
@@ -99,7 +87,7 @@ class MongoTestServer(TestServerV2):
         cmd = [
             "--bind_ip=%s" % self._listen_hostname,
             "--port=%s" % self.port,
-            "--nounixsocket",
+            # "--nounixsocket",
             "--syncdelay=0",
             "--nojournal",
             "--quiet",

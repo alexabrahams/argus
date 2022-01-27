@@ -4,6 +4,10 @@ import socket
 
 import pytest
 
+from tests.util import get_random_id
+
+SESSION_ID_LEN = 8
+
 
 class Config(object):
     __slots__ = ()
@@ -109,7 +113,6 @@ DEFAULT_SERVER_FIXTURES_HTTPD = "apache2"
 DEFAULT_SERVER_FIXTURES_HTTPD_IMAGE = "httpd:2.4.37"
 DEFAULT_SERVER_FIXTURES_HTTPD_MODULES = "/usr/lib/apache2/modules"
 DEFAULT_SERVER_FIXTURES_XVFB = "Xvfb"
-
 
 CONFIG = FixtureConfig(
     # Not using localhost here in case we are being used in a cluster-type job
