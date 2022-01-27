@@ -9,14 +9,8 @@ from pandas import DataFrame, MultiIndex, Series, DatetimeIndex, Index
 from .._util import NP_OBJECT_DTYPE
 from ..exceptions import ArgusException
 
-try:  # 0.21+ Compatibility
-    from pandas._libs.tslib import Timestamp
-    from pandas._libs.tslibs.timezones import get_timezone
-except ImportError:
-    try:  # 0.20.x Compatibility
-        from pandas._libs.tslib import Timestamp, get_timezone
-    except ImportError:  # <= 0.19 Compatibility
-        from pandas.tslib import Timestamp, get_timezone
+from pandas._libs.tslib import Timestamp
+from pandas._libs.tslibs.timezones import get_timezone
 
 log = logging.getLogger(__name__)
 PD_VER = pd.__version__

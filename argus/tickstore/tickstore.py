@@ -12,16 +12,10 @@ from pymongo import ReadPreference
 from pymongo.errors import OperationFailure
 from six import iteritems, string_types
 
-try:
-    from pandas.core.frame import _arrays_to_mgr
-except ImportError:
-    # Deprecated since pandas 0.23.4
-    from pandas.core.internals.construction import arrays_to_mgr as _arrays_to_mgr
+from pandas.core.internals.construction import arrays_to_mgr as _arrays_to_mgr
 
-try:
-    from pandas.api.types import infer_dtype
-except ImportError:
-    from pandas.lib import infer_dtype
+from pandas.api.types import infer_dtype
+
 
 from ..date import (
     DateRange,
