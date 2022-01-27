@@ -1,0 +1,43 @@
+[tool.black]
+line-length = 120
+target-version = ['py38']
+
+[tool.isort]
+py_version=38
+profile = "black"
+skip = "setup.py"
+
+[pycodestyle]
+max-line-length = 120
+
+[tool.poetry]
+name = "argus"
+version = "1.0"
+description = "Tick DB"
+authors = ["Alex Abrahams"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.9"
+pandas = "^1.4.0"
+numpy = "^1.22.1"
+pymongo = "^4.0.1"
+decorator = "^5.1.1"
+enum-compat = "^0.0.3"
+mock = "^4.0.3"
+mockextras = "^1.0.2"
+pytz = "^2021.3"
+tzlocal = "^4.1"
+lz4 = "^3.1.10"
+pytest-timeout = "^2.1.0"
+pytest-xdist = "^2.5.0"
+pytest-cov = "^3.0.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[virtualenvs]
+in-project = true
