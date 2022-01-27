@@ -72,4 +72,4 @@ class ServerClass(threading.Thread):
 
     @property
     def name(self):
-        return "server-fixtures-%s-%s" % (CONFIG.session_id, self._id)
+        return f"server-fixtures-{CONFIG.session_id}-{self._id}"

@@ -12,7 +12,7 @@ from ..exceptions import AsyncArgusException
 
 def _argus_task_exec(request):
     request.start_time = time.time()
-    logging.debug("Executing asynchronous request for {}/{}".format(request.library, request.symbol))
+    logging.debug(f"Executing asynchronous request for {request.library}/{request.symbol}")
     result = None
     try:
         request.is_running = True
@@ -124,7 +124,7 @@ class AsyncArgus(LazySingletonTasksCoordinator):
                     self._schedule_request(deferred)
                     break
         except:
-            logging.exception("Failed to re-schedule a deferred task: {}".format(picked))
+            logging.exception(f"Failed to re-schedule a deferred task: {picked}")
             return
         self.deferred_requests.remove(picked)
 

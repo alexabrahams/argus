@@ -22,7 +22,7 @@ def mongo_host(mongo_server):
 def argus(mongo_server):
     logger.info("argus.fixtures: argus init()")
     mongo_server.api.drop_database("argus")
-    mongo_server.api.drop_database("argus_{}".format(getpass.getuser()))
+    mongo_server.api.drop_database(f"argus_{getpass.getuser()}")
     argus = m.Argus(mongo_host=mongo_server.api)
     # Do not add global libraries here: use specific fixtures below.
     # Remember, for testing it does not usually matter what your libraries are called.
@@ -222,7 +222,7 @@ def library_name():
 
 @pytest.fixture(scope="function")
 def user_library_name():
-    return "{}.TEST".format(getpass.getuser())
+    return f"{getpass.getuser()}.TEST"
 
 
 @pytest.fixture(scope="function")
@@ -265,7 +265,7 @@ def overlay_library(argus, overlay_library_name):
 
 def _overlay_library(argus, overlay_library_name):
     rw_name = overlay_library_name
-    ro_name = "{}_RAW".format(overlay_library_name)
+    ro_name = f"{overlay_library_name}_RAW"
     argus.initialize_library(rw_name, m.VERSION_STORE, segment="year")
     argus.initialize_library(ro_name, m.VERSION_STORE, segment="year")
     return argus.get_library(rw_name), argus.get_library(ro_name)

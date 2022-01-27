@@ -168,7 +168,7 @@ def test_delete_library(argus, library, library_name):
     with pytest.raises(LibraryNotFoundException):
         argus[library_name]
     with pytest.raises(LibraryNotFoundException):
-        argus["argus_{}".format(library_name)]
+        argus[f"argus_{library_name}"]
     assert "library2" in mongo.argus_user.list_collection_names()
     assert "library2.versions" in mongo.argus_user.list_collection_names()
 

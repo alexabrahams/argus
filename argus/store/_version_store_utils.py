@@ -161,14 +161,14 @@ def analyze_symbol(instance, sym, from_ver, to_ver, do_reads=False):
     do_reads : `bool`
         If this flag is set to true, then the corruption check will actually try to read the symbol (slower).
     """
-    logging.info("Analyzing symbol {}. Versions range is [v{}, v{}]".format(sym, from_ver, to_ver))
+    logging.info(f"Analyzing symbol {sym}. Versions range is [v{from_ver}, v{to_ver}]")
     prev_rows = 0
     prev_n = 0
     prev_v = None
 
-    logging.info("\nVersions for {}:".format(sym))
+    logging.info(f"\nVersions for {sym}:")
     for v in instance._versions.find(
-        {"symbol": sym, "version": {"$gte": from_ver, "$lte": to_ver}}, sort=[("version", pymongo.ASCENDING)]
+            {"symbol": sym, "version": {"$gte": from_ver, "$lte": to_ver}}, sort=[("version", pymongo.ASCENDING)]
     ):
         n = v.get("version")
 
@@ -239,7 +239,7 @@ def analyze_symbol(instance, sym, from_ver, to_ver, do_reads=False):
         prev_n = n
         prev_v = v
 
-    logging.info("\nSegments for {}:".format(sym))
+    logging.info(f"\nSegments for {sym}:")
     for seg in instance._collection.find({"symbol": sym}, sort=[("_id", pymongo.ASCENDING)]):
         logging.info(
             "{: <32}  {: <7}  {: <10} {: <30}".format(
@@ -253,7 +253,7 @@ def analyze_symbol(instance, sym, from_ver, to_ver, do_reads=False):
 
 def _fast_check_corruption(collection, sym, v, check_count, check_last_segment, check_append_safe):
     if v is None:
-        logging.warning("Symbol {} with version {} not found, so can't be corrupted.".format(sym, v))
+        logging.warning(f"Symbol {sym} with version {v} not found, so can't be corrupted.")
         return False
 
     if not check_count and not check_last_segment:
@@ -297,7 +297,7 @@ def _fast_check_corruption(collection, sym, v, check_count, check_last_segment, 
             if max_seg != v.get("up_to"):
                 return True  # corrupted, last segment and version's up_to don't agree
     except OperationFailure as e:
-        logging.warning("Corruption checks are skipped (sym={}, version={}): {}".format(sym, v["version"], str(e)))
+        logging.warning(f"Corruption checks are skipped (sym={sym}, version={v['version']}): {str(e)}")
 
     return False
 
@@ -374,7 +374,7 @@ def is_corrupted(instance, sym, input_v):
     # If version is just a number, read the version document
     input_v = instance._versions.find_one({"symbol": sym, "version": input_v}) if isinstance(input_v, int) else input_v
     if not _fast_check_corruption(
-        instance._collection, sym, input_v, check_count=True, check_last_segment=True, check_append_safe=False
+            instance._collection, sym, input_v, check_count=True, check_last_segment=True, check_append_safe=False
     ):
         try:
             # Done with the fast checks, proceed to a full read if instructed

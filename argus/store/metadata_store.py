@@ -54,7 +54,7 @@ class MetadataStore(BSONStore):
         return MetadataStore.__init__(self, state["argus_lib"])
 
     def __str__(self):
-        return """<%s at %s>\n%s""" % (self.__class__.__name__, hex(id(self)), indent(str(self._argus_lib), 4))
+        return f"""<{self.__class__.__name__} at {hex(id(self))}>\n{indent(str(self._argus_lib), 4)}"""
 
     def __repr__(self):
         return str(self)
@@ -218,7 +218,7 @@ class MetadataStore(BSONStore):
         if old_metadata is not None:
             if old_metadata["start_time"] >= start_time:
                 raise ValueError(
-                    "start_time={} is earlier than the last metadata @{}".format(start_time, old_metadata["start_time"])
+                    f"start_time={start_time} is earlier than the last metadata @{old_metadata['start_time']}"
                 )
             if old_metadata["metadata"] == metadata:
                 return old_metadata
@@ -256,7 +256,7 @@ class MetadataStore(BSONStore):
         if old_metadata is not None:
             if old_metadata["start_time"] <= start_time:
                 raise ValueError(
-                    "start_time={} is later than the first metadata @{}".format(start_time, old_metadata["start_time"])
+                    f"start_time={start_time} is later than the first metadata @{old_metadata['start_time']}"
                 )
             if old_metadata["metadata"] == metadata:
                 self.find_one_and_update(
@@ -291,7 +291,7 @@ class MetadataStore(BSONStore):
         """
         last_metadata = self.find_one({"symbol": symbol}, sort=[("start_time", pymongo.DESCENDING)])
         if last_metadata is None:
-            raise NoDataFoundException("No metadata found for symbol {}".format(symbol))
+            raise NoDataFoundException(f"No metadata found for symbol {symbol}")
 
         self.find_one_and_delete({"symbol": symbol}, sort=[("start_time", pymongo.DESCENDING)])
         mongo_retry(self.find_one_and_update)(
@@ -310,5 +310,5 @@ class MetadataStore(BSONStore):
         symbol : `str`
             symbol name to delete
         """
-        logger.warning("Deleting entire metadata history for %r from %r" % (symbol, self._argus_lib.get_name()))
+        logger.warning(f"Deleting entire metadata history for {symbol!r} from {self._argus_lib.get_name()!r}")
         self.delete_many({"symbol": symbol})

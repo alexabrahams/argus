@@ -21,6 +21,7 @@ from ._config import (
 logger = logging.getLogger(__name__)
 
 _compress_thread_pool = None
+ENABLE_PARALLEL = ENABLE_PARALLEL
 
 
 def enable_parallel_lz4(mode):
@@ -34,7 +35,7 @@ def enable_parallel_lz4(mode):
     """
     global ENABLE_PARALLEL
     ENABLE_PARALLEL = bool(mode)
-    logger.info("Setting parallelisation mode to {}".format("multi-threaded" if mode else "single-threaded"))
+    logger.info(f"Setting parallelisation mode to {'multi-threaded' if mode else 'single-threaded'}")
 
 
 def set_compression_pool_size(pool_size):
@@ -53,7 +54,7 @@ def set_compression_pool_size(pool_size):
     """
     pool_size = int(pool_size)
     if pool_size < 1:
-        raise ValueError("The compression thread pool size cannot be of size {}".format(pool_size))
+        raise ValueError(f"The compression thread pool size cannot be of size {pool_size}")
 
     global _compress_thread_pool
     if _compress_thread_pool is not None:

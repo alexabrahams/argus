@@ -85,8 +85,8 @@ class MongoTestServer(TestServerV2):
 
     def get_args(self, **kwargs):
         cmd = [
-            "--bind_ip=%s" % self._listen_hostname,
-            "--port=%s" % self.port,
+            f"--bind_ip={self._listen_hostname}",
+            f"--port={self.port}",
             # "--nounixsocket",
             "--syncdelay=0",
             "--nojournal",
@@ -94,7 +94,7 @@ class MongoTestServer(TestServerV2):
         ]
 
         if "workspace" in kwargs:
-            cmd.append("--dbpath=%s" % str(kwargs["workspace"]))
+            cmd.append(f"--dbpath={str(kwargs['workspace'])}")
 
         return cmd
 
@@ -117,7 +117,7 @@ class MongoTestServer(TestServerV2):
         if not self.hostname:
             return False
 
-        log.info("Connecting to Mongo at %s:%s" % (self.hostname, self.port))
+        log.info(f"Connecting to Mongo at {self.hostname}:{self.port}")
         try:
             with pymongo.MongoClient(self.hostname, self.port, serverselectiontimeoutms=200) as initial_api:
                 initial_api.list_database_names()

@@ -202,7 +202,7 @@ def test_lib_repr():
 
 
 def test_register_library_type():
-    class DummyType(object):
+    class DummyType:
         pass
 
     register_library_type("new_dummy_type", DummyType)
@@ -372,7 +372,7 @@ def test_initialize_library_too_many_ns():
     self._cache = create_autospec(Cache)
     lib = create_autospec(ArgusLibraryBinding)
     lib.database_name = sentinel.db_name
-    self._conn.__getitem__.return_value.list_collection_names.return_value = [x for x in six.moves.xrange(5001)]
+    self._conn.__getitem__.return_value.list_collection_names.return_value = [x for x in six.moves.range(5001)]
     lib_type = Mock()
     with pytest.raises(ArgusException) as e:
         with patch.dict("argus.argus.LIBRARY_TYPES", {sentinel.lib_type: lib_type}), patch(
@@ -391,7 +391,7 @@ def test_initialize_library_with_list_coll_names():
     lib = create_autospec(ArgusLibraryBinding)
     lib.database_name = sentinel.db_name
     lib.get_quota.return_value = None
-    self._conn.__getitem__.return_value.list_collection_names.return_value = [x for x in six.moves.xrange(5001)]
+    self._conn.__getitem__.return_value.list_collection_names.return_value = [x for x in six.moves.range(5001)]
     lib_type = Mock()
     with patch.dict("argus.argus.LIBRARY_TYPES", {sentinel.lib_type: lib_type}), patch(
         "argus.argus.ArgusLibraryBinding", return_value=lib, autospec=True
@@ -437,7 +437,7 @@ def test_get_library_not_initialized():
     with pytest.raises(LibraryNotFoundException) as e, patch("argus.argus.ArgusLibraryBinding", autospec=True) as ML:
         ML.return_value.get_library_type.return_value = None
         Argus.get_library(self, sentinel.lib_name)
-    assert "Library %s was not correctly initialized in %s." % (sentinel.lib_name, self) in str(e.value)
+    assert f"Library {sentinel.lib_name} was not correctly initialized in {self}." in str(e.value)
 
 
 def test_get_library_auth_issue():
@@ -448,7 +448,7 @@ def test_get_library_auth_issue():
             "database error: not authorized for query on argus_marketdata.index.ARGUS"
         )
         Argus.get_library(self, sentinel.lib_name)
-    assert "Library %s was not correctly initialized in %s." % (sentinel.lib_name, self) in str(e.value)
+    assert f"Library {sentinel.lib_name} was not correctly initialized in {self}." in str(e.value)
 
 
 def test_get_library_not_registered():

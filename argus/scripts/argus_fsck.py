@@ -31,7 +31,7 @@ def main():
     if not opts.f:
         logger.info("DRY-RUN: No changes will be made.")
 
-    logger.info("FSCK'ing: %s on mongo %s" % (opts.library, opts.host))
+    logger.info(f"FSCK'ing: {opts.library} on mongo {opts.host}")
     store = Argus(get_mongodb_uri(opts.host))
 
     for lib in opts.library:
@@ -49,8 +49,8 @@ def main():
 
         final_stats = store[lib].stats()
         logger.info("Stats:")
-        logger.info("Sharded:        %s" % final_stats["chunks"].get("sharded", False))
-        logger.info("Symbols:  %10d" % len(store[lib].list_symbols()))
+        logger.info(f"Sharded:        {final_stats['chunks'].get('sharded', False)}")
+        logger.info(f"Symbols:  {len(store[lib].list_symbols()):10}")
         logger.info(
             "Versions: %10d   Change(+/-) %6d  (av: %.2fMB)"
             % (

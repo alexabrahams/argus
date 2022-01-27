@@ -6,23 +6,23 @@ import numpy as np
 import pymongo
 from bson.binary import Binary
 from pymongo.errors import OperationFailure, DuplicateKeyError, BulkWriteError
-from six.moves import xrange
 
 from ._version_store_utils import checksum, version_base_or_id, _fast_check_corruption
 from .._compression import compress_array, decompress
-
 # CHECK_CORRUPTION_ON_APPEND used in global scope, do not remove.
 from .._config import (
     FW_POINTERS_CONFIG_KEY,
     FW_POINTERS_REFS_KEY,
     ARGUS_FORWARD_POINTERS_CFG,
     ARGUS_FORWARD_POINTERS_RECONCILE,
+    CHECK_CORRUPTION_ON_APPEND,
     FwPointersCfg,
-)
+)  # noqa # pylint: disable=unused-import
 from .._util import mongo_count, get_fwptr_config
 from ..decorators import mongo_retry
 from ..exceptions import UnhandledDtypeException, DataIntegrityException
 
+CHECK_CORRUPTION_ON_APPEND = CHECK_CORRUPTION_ON_APPEND
 logger = logging.getLogger(__name__)
 
 _CHUNK_SIZE = 2 * 1024 * 1024 - 2048  # ~2 MB (a bit less for usePowerOf2Sizes)
@@ -230,7 +230,7 @@ def _fw_pointers_convert_append_to_write(previous_version):
     return prev_fw_config is FwPointersCfg.ENABLED and ARGUS_FORWARD_POINTERS_CFG is not FwPointersCfg.ENABLED
 
 
-class NdarrayStore(object):
+class NdarrayStore:
     """Chunked store for arbitrary ndarrays, supporting append.
 
     for the simple example:
@@ -421,8 +421,8 @@ class NdarrayStore(object):
 
     def append(self, argus_lib, version, symbol, item, previous_version, dtype=None, dirty_append=True):
         collection = argus_lib.get_top_level_collection()
-        if previous_version.get("shape", [-1]) != [-1,] + list(
-            item.shape
+        if previous_version.get("shape", [-1]) != [-1, ] + list(
+                item.shape
         )[1:]:
             raise UnhandledDtypeException()
 
@@ -447,7 +447,7 @@ class NdarrayStore(object):
             version[FW_POINTERS_REFS_KEY] = list()
 
         if str(dtype) != previous_version["dtype"] or _fw_pointers_convert_append_to_write(previous_version):
-            logger.debug("Converting %s from %s to %s" % (symbol, previous_version["dtype"], str(dtype)))
+            logger.debug(f"Converting {symbol} from {previous_version['dtype']} to {str(dtype)}")
             if item.dtype.hasobject:
                 raise UnhandledDtypeException()
             version["dtype"] = str(dtype)
@@ -469,7 +469,8 @@ class NdarrayStore(object):
 
             # Verify (potential) corruption with append
             if CHECK_CORRUPTION_ON_APPEND and _fast_check_corruption(
-                collection, symbol, previous_version, check_count=False, check_last_segment=True, check_append_safe=True
+                    collection, symbol, previous_version, check_count=False, check_last_segment=True,
+                    check_append_safe=True
             ):
                 logging.warning(
                     "Found mismatched segments for {} (version={}). "
@@ -565,8 +566,8 @@ class NdarrayStore(object):
         # The unchanged segments are the compressed ones (apart from the last compressed)
         unchanged_segments = []
         for segment in sorted(
-            collection.find(spec, projection={"_id": 1, "segment": 1, "compressed": 1, "sha": 1}),
-            key=itemgetter("segment"),
+                collection.find(spec, projection={"_id": 1, "segment": 1, "compressed": 1, "sha": 1}),
+                key=itemgetter("segment"),
         ):
             # We want to stop iterating when we find the first uncompressed chunks
             if not segment["compressed"]:
@@ -593,13 +594,13 @@ class NdarrayStore(object):
         # Only read back the section that needs to be compressed here (index_range=...)
         old_arr = self._do_read(collection, previous_version, symbol, index_range=read_index_range)
         if len(item) == 0:
-            logger.debug("Rewrite and compress/chunk item %s, rewrote old_arr" % symbol)
+            logger.debug(f"Rewrite and compress/chunk item {symbol}, rewrote old_arr")
             self._do_write(collection, version, symbol, old_arr, previous_version, segment_offset=read_index_range[0])
         elif len(old_arr) == 0:
-            logger.debug("Rewrite and compress/chunk item %s, wrote item" % symbol)
+            logger.debug(f"Rewrite and compress/chunk item {symbol}, wrote item")
             self._do_write(collection, version, symbol, item, previous_version, segment_offset=read_index_range[0])
         else:
-            logger.debug("Rewrite and compress/chunk %s, np.concatenate %s to %s" % (symbol, item.dtype, old_arr.dtype))
+            logger.debug(f"Rewrite and compress/chunk {symbol}, np.concatenate {item.dtype} to {old_arr.dtype}")
             self._do_write(
                 collection,
                 version,
@@ -685,14 +686,14 @@ class NdarrayStore(object):
 
         if previous_version:
             if (
-                "sha" in previous_version
-                and previous_version["dtype"] == version["dtype"]
-                and self.checksum(item[: previous_version["up_to"]]) == previous_version["sha"]
+                    "sha" in previous_version
+                    and previous_version["dtype"] == version["dtype"]
+                    and self.checksum(item[: previous_version["up_to"]]) == previous_version["sha"]
             ):
                 # The first n rows are identical to the previous version, so just append.
                 # Do a 'dirty' append (i.e. concat & start from a new base version) for safety
                 self._do_append(
-                    collection, version, symbol, item[previous_version["up_to"] :], previous_version, dirty_append=True
+                    collection, version, symbol, item[previous_version["up_to"]:], previous_version, dirty_append=True
                 )
                 return
 
@@ -725,8 +726,8 @@ class NdarrayStore(object):
         segment_index = []
 
         # Compress
-        idxs = xrange(int(np.ceil(float(length) / rows_per_chunk)))
-        chunks = [(item[i * rows_per_chunk : (i + 1) * rows_per_chunk]).tostring() for i in idxs]
+        idxs = range(int(np.ceil(float(length) / rows_per_chunk)))
+        chunks = [(item[i * rows_per_chunk: (i + 1) * rows_per_chunk]).tostring() for i in idxs]
         compressed_chunks = compress_array(chunks)
 
         # Write
@@ -775,7 +776,7 @@ class NdarrayStore(object):
             try:
                 collection.bulk_write(bulk, ordered=False)
             except BulkWriteError as bwe:
-                logger.error("Bulk write failed with details: %s (Exception: %s)" % (bwe.details, bwe))
+                logger.error(f"Bulk write failed with details: {bwe.details} (Exception: {bwe})")
                 raise
 
         segment_index = self._segment_index(

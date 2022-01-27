@@ -11,7 +11,7 @@ def test_main():
         run_as_main(
             main,
             "--host",
-            "%s:%s" % (sentinel.host, sentinel.port),
+            f"{sentinel.host}:{sentinel.port}",
             "-v",
             "--library",
             "sentinel.library",
@@ -21,8 +21,8 @@ def test_main():
     get_mongodb_uri.assert_called_once_with("sentinel.host:sentinel.port")
     Argus.assert_called_once_with(get_mongodb_uri.return_value)
     assert do_db_auth.call_args_list == [
-        call("%s:%s" % (sentinel.host, sentinel.port), Argus.return_value._conn, "argus_sentinel"),
-        call("%s:%s" % (sentinel.host, sentinel.port), Argus.return_value._conn, "argus"),
+        call(f"{sentinel.host}:{sentinel.port}", Argus.return_value._conn, "argus_sentinel"),
+        call(f"{sentinel.host}:{sentinel.port}", Argus.return_value._conn, "argus"),
     ]
     assert Argus.return_value.__getitem__.return_value._fsck.call_args_list == [
         call(False),
@@ -37,7 +37,7 @@ def test_main_dry_run():
         run_as_main(
             main,
             "--host",
-            "%s:%s" % (sentinel.host, sentinel.port),
+            f"{sentinel.host}:{sentinel.port}",
             "-v",
             "--library",
             "sentinel.library",

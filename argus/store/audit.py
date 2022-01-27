@@ -14,7 +14,7 @@ from ..exceptions import NoDataFoundException, ConcurrentModificationException
 logger = logging.getLogger(__name__)
 
 
-class DataChange(object):
+class DataChange:
     """
     Object representing incoming data change
     """
@@ -24,7 +24,7 @@ class DataChange(object):
         self.new_data = new_data
 
 
-class ArgusTransaction(object):
+class ArgusTransaction:
     """Use this context manager if you want to modify data in a version store while ensuring that no other writes
     interfere with your own.
 
@@ -127,9 +127,9 @@ class ArgusTransaction(object):
         if data is not None:
             # We only write data if existing data is None or the Timeseries data has changed or metadata has changed
             if (
-                self.base_ts.data is None
-                or not are_equals(data, self.base_ts.data)
-                or metadata != self.base_ts.metadata
+                    self.base_ts.data is None
+                    or not are_equals(data, self.base_ts.data)
+                    or metadata != self.base_ts.metadata
             ):
                 self._do_write = True
         self._write = partial(
@@ -152,10 +152,10 @@ class ArgusTransaction(object):
             versions.reverse()
             base_offset = versions.index(self.base_ts.version)
             new_offset = versions.index(written_ver.version)
-            if len(versions[base_offset : new_offset + 1]) != 2:
+            if len(versions[base_offset: new_offset + 1]) != 2:
                 self._version_store._delete_version(self._symbol, written_ver.version)
                 raise ConcurrentModificationException(
-                    "Inconsistent Versions: {}: {}->{}".format(self._symbol, self.base_ts.version, written_ver.version)
+                    f"Inconsistent Versions: {self._symbol}: {self.base_ts.version}->{written_ver.version}"
                 )
 
             changed = ChangedItem(self._symbol, self.base_ts, written_ver, None)

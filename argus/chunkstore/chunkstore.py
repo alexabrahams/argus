@@ -7,7 +7,6 @@ import pymongo
 from bson.binary import Binary
 from pandas import DataFrame, Series
 from pymongo.errors import OperationFailure
-from six.moves import xrange
 
 from .date_chunker import DateChunker, START, END
 from .passthrough_chunker import PassthroughChunker
@@ -37,7 +36,7 @@ SER_MAP = {FrametoArraySerializer.TYPE: FrametoArraySerializer()}
 CHUNKER_MAP = {DateChunker.TYPE: DateChunker(), PassthroughChunker.TYPE: PassthroughChunker()}
 
 
-class ChunkStore(object):
+class ChunkStore:
     @classmethod
     def initialize_library(cls, argus_lib, hashed=True, **kwargs):
         ChunkStore(argus_lib)._ensure_index()
@@ -47,7 +46,7 @@ class ChunkStore(object):
             enable_sharding(argus_lib.argus, argus_lib.get_name(), hashed=hashed, key=SYMBOL)
         except OperationFailure as e:
             logger.warning(
-                "Library created, but couldn't enable sharding: %s. This is OK if you're not 'admin'" % str(e)
+                f"Library created, but couldn't enable sharding: {str(e)}. This is OK if you're not 'admin'"
             )
 
     @mongo_retry
@@ -103,7 +102,7 @@ class ChunkStore(object):
         return ChunkStore.__init__(self, state["argus_lib"])
 
     def __str__(self):
-        return """<%s at %s>\n%s""" % (self.__class__.__name__, hex(id(self)), indent(str(self._argus_lib), 4))
+        return f"""<{self.__class__.__name__} at {hex(id(self))}>\n{indent(str(self._argus_lib), 4)}"""
 
     def __repr__(self):
         return str(self)
@@ -208,10 +207,10 @@ class ChunkStore(object):
 
         sym = self._get_symbol_info(from_symbol)
         if not sym:
-            raise NoDataFoundException("No data found for %s" % (from_symbol))
+            raise NoDataFoundException(f"No data found for {from_symbol}")
 
         if self._get_symbol_info(to_symbol) is not None:
-            raise Exception("Symbol %s already exists" % (to_symbol))
+            raise Exception(f"Symbol {to_symbol} already exists")
 
         mongo_retry(self._collection.update_many)({SYMBOL: from_symbol}, {"$set": {SYMBOL: to_symbol}})
         mongo_retry(self._symbols.update_one)({SYMBOL: from_symbol}, {"$set": {SYMBOL: to_symbol}})
@@ -251,7 +250,7 @@ class ChunkStore(object):
 
         sym = self._get_symbol_info(symbol)
         if not sym:
-            raise NoDataFoundException("No data found for %s" % (symbol))
+            raise NoDataFoundException(f"No data found for {symbol}")
 
         spec = {SYMBOL: {"$in": symbol}}
         chunker = CHUNKER_MAP[sym[0][CHUNKER]]
@@ -354,9 +353,9 @@ class ChunkStore(object):
                 [
                     Binary(x[SHA])
                     for x in self._collection.find(
-                        {SYMBOL: symbol},
-                        projection={SHA: True, "_id": False},
-                    )
+                    {SYMBOL: symbol},
+                    projection={SHA: True, "_id": False},
+                )
                 ]
             )
         ops = []
@@ -370,8 +369,8 @@ class ChunkStore(object):
             doc[METADATA] = {"columns": data[METADATA][COLUMNS] if COLUMNS in data[METADATA] else ""}
             meta = data[METADATA]
 
-            for i in xrange(int(len(data[DATA]) / MAX_CHUNK_SIZE + 1)):
-                chunk = {DATA: Binary(data[DATA][i * MAX_CHUNK_SIZE : (i + 1) * MAX_CHUNK_SIZE])}
+            for i in range(int(len(data[DATA]) / MAX_CHUNK_SIZE + 1)):
+                chunk = {DATA: Binary(data[DATA][i * MAX_CHUNK_SIZE: (i + 1) * MAX_CHUNK_SIZE])}
                 chunk[SEGMENT] = i
                 chunk[START] = meta[START] = start
                 chunk[END] = meta[END] = end
@@ -464,8 +463,8 @@ class ChunkStore(object):
             if seg_count > chunk_count:
                 self._collection.delete_many({SYMBOL: symbol, START: start, END: end, SEGMENT: {"$gte": chunk_count}})
 
-            for i in xrange(chunk_count):
-                chunk = {DATA: Binary(data[DATA][i * MAX_CHUNK_SIZE : (i + 1) * MAX_CHUNK_SIZE])}
+            for i in range(chunk_count):
+                chunk = {DATA: Binary(data[DATA][i * MAX_CHUNK_SIZE: (i + 1) * MAX_CHUNK_SIZE])}
                 chunk[SEGMENT] = i
                 chunk[START] = start
                 chunk[END] = end
@@ -670,7 +669,7 @@ class ChunkStore(object):
             spec.update(CHUNKER_MAP[sym[CHUNKER]].to_mongo(chunk_range))
 
         for x in self._collection.find(
-            spec, projection=[START, END], sort=[(START, pymongo.ASCENDING if not reverse else pymongo.DESCENDING)]
+                spec, projection=[START, END], sort=[(START, pymongo.ASCENDING if not reverse else pymongo.DESCENDING)]
         ):
             yield (c.chunk_to_str(x[START]), c.chunk_to_str(x[END]))
 

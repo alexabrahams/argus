@@ -112,7 +112,7 @@ META = "md"
 CHUNK_VERSION_NUMBER = 3
 
 
-class TickStore(object):
+class TickStore:
     @classmethod
     def initialize_library(cls, argus_lib, **kwargs):
         TickStore(argus_lib)._ensure_index()
@@ -154,12 +154,8 @@ class TickStore(object):
         return TickStore.__init__(self, state["argus_lib"])
 
     def __str__(self):
-        return """<%s at %s>
-%s""" % (
-            self.__class__.__name__,
-            hex(id(self)),
-            indent(str(self._argus_lib), 4),
-        )
+        return f"""<{self.__class__.__name__} at {hex(id(self))}>
+{indent(str(self._argus_lib), 4)}"""
 
     def __repr__(self):
         return str(self)
@@ -248,7 +244,7 @@ class TickStore(object):
             assert date_range.end.tzinfo
             last_dt = date_range.end
         else:
-            logger.info("No end provided.  Loading a month for: {}:{}".format(symbol, first_dt))
+            logger.info(f"No end provided.  Loading a month for: {symbol}:{first_dt}")
             if not first_dt:
                 first_doc = self._collection.find_one(
                     self._symbol_query(symbol), projection={START: 1, ID: 0}, sort=[(START, pymongo.ASCENDING)]
@@ -281,7 +277,8 @@ class TickStore(object):
         return ReadPreference.NEAREST if allow_secondary else ReadPreference.PRIMARY
 
     def read(
-        self, symbol, date_range=None, columns=None, include_images=False, allow_secondary=None, _target_tick_count=0
+            self, symbol, date_range=None, columns=None, include_images=False, allow_secondary=None,
+            _target_tick_count=0
     ):
         """
         Read data for the named symbol.  Returns a VersionedItem object with
@@ -320,7 +317,7 @@ class TickStore(object):
         if columns:
             projection = dict(
                 [(SYMBOL, 1), (INDEX, 1), (START, 1), (VERSION, 1), (IMAGE_DOC, 1)]
-                + [(COLUMNS + ".%s" % c, 1) for c in columns]
+                + [(COLUMNS + f".{c}", 1) for c in columns]
             )
             column_set.update([c for c in columns if c != "SYMBOL"])
         else:
@@ -330,7 +327,7 @@ class TickStore(object):
         ticks_read = 0
         data_coll = self._collection.with_options(read_preference=self._read_preference(allow_secondary))
         for b in data_coll.find(query, projection=projection).sort(
-            [(START, pymongo.ASCENDING)],
+                [(START, pymongo.ASCENDING)],
         ):
             data = self._read_bucket(
                 b,
@@ -351,7 +348,7 @@ class TickStore(object):
                 break
 
         if not rtn:
-            raise NoDataFoundException("No Data found for {} in range: {}".format(symbol, date_range))
+            raise NoDataFoundException(f"No Data found for {symbol} in range: {date_range}")
         rtn = self._pad_and_fix_dtypes(rtn, column_dtypes)
 
         index = pd.to_datetime(np.concatenate(rtn[INDEX]), utc=True, unit="ms")
@@ -359,8 +356,8 @@ class TickStore(object):
             columns = [x for x in rtn.keys() if x not in (INDEX, "SYMBOL")]
         if multiple_symbols and "SYMBOL" not in columns:
             columns = [
-                "SYMBOL",
-            ] + columns
+                          "SYMBOL",
+                      ] + columns
 
         if len(index) > 0:
             arrays = [np.concatenate(rtn[k]) for k in columns]
@@ -373,7 +370,7 @@ class TickStore(object):
             arrays = [a[sort] for a in arrays]
 
         t = (dt.now() - perf_start).total_seconds()
-        logger.info("Got data in %s secs, creating DataFrame..." % t)
+        logger.info(f"Got data in {t} secs, creating DataFrame...")
         mgr = _arrays_to_mgr(arrays, columns, index, columns, dtype=None)
         rtn = pd.DataFrame(mgr)
         # Present data in the user's default TimeZone
@@ -388,7 +385,7 @@ class TickStore(object):
             rtn = rtn.sort_index(kind="mergesort")
         if date_range:
             # FIXME: support DateRange.interval...
-            rtn = rtn.loc[date_range.start : date_range.end]
+            rtn = rtn.loc[date_range.start: date_range.end]
         return rtn
 
     def read_metadata(self, symbol):
@@ -416,11 +413,11 @@ class TickStore(object):
                 col_len = len(v)
                 if col_len < full_length:
                     v = (
-                        [
-                            None,
-                        ]
-                        * (full_length - col_len)
-                    ) + v
+                                [
+                                    None,
+                                ]
+                                * (full_length - col_len)
+                        ) + v
                     assert len(v) == full_length
                 for i, arr in enumerate(v):
                     if arr is None:
@@ -432,7 +429,7 @@ class TickStore(object):
                         # Casting the object to a string is not worthwhile anyway as Pandas changes the
                         # dtype back to objectS
                         if (i == 0 or v[i].dtype != v[i - 1].dtype) and np.can_cast(
-                            v[i].dtype, column_dtypes[k], casting="safe"
+                                v[i].dtype, column_dtypes[k], casting="safe"
                         ):
                             v[i] = v[i].astype(column_dtypes[k], casting="safe")
 
@@ -469,7 +466,7 @@ class TickStore(object):
         for field in set(document).difference(set(image)):
             if field == INDEX:
                 continue
-            logger.debug("Field %s is missing from image!" % field)
+            logger.debug(f"Field {field} is missing from image!")
             if document[field] is not None:
                 val = np.nan
                 document[field] = np.insert(document[field], 0, document[field].dtype.type(val))
@@ -478,7 +475,7 @@ class TickStore(object):
     def _read_bucket(self, doc, column_set, column_dtypes, include_symbol, include_images, columns):
         rtn = {}
         if doc[VERSION] != 3:
-            raise ArgusException("Unhandled document version: %s" % doc[VERSION])
+            raise ArgusException(f"Unhandled document version: {doc[VERSION]}")
         # np.cumsum copies the read-only array created with frombuffer
         rtn[INDEX] = np.cumsum(np.frombuffer(lz4_decompress(doc[INDEX]), dtype="uint64"))
         doc_length = len(rtn[INDEX])
@@ -500,8 +497,8 @@ class TickStore(object):
         rtn[INDEX] = rtn[INDEX][union_mask]
         if include_symbol:
             rtn["SYMBOL"] = [
-                doc[SYMBOL],
-            ] * rtn_length
+                                doc[SYMBOL],
+                            ] * rtn_length
 
         # Unpack each requested column in turn
         for c in column_set:
@@ -515,8 +512,8 @@ class TickStore(object):
                 rtn[c] = self._empty(rtn_length, dtype=column_dtypes[c])
                 # unpackbits will make a copy of the read-only array created by frombuffer
                 rowmask = np.unpackbits(np.frombuffer(lz4_decompress(coldata[ROWMASK]), dtype="uint8"))[
-                    :doc_length
-                ].astype("bool")
+                          :doc_length
+                          ].astype("bool")
                 rowmask = rowmask[union_mask]
                 rtn[c][rowmask] = values
             except KeyError:
@@ -621,7 +618,7 @@ class TickStore(object):
             end = data.index[-1].to_pydatetime()
             pandas = True
         else:
-            raise UnhandledDtypeException("Can't persist type %s to tickstore" % type(data))
+            raise UnhandledDtypeException(f"Can't persist type {type(data)} to tickstore")
         self._assert_nonoverlapping_data(symbol, to_dt(start), to_dt(end))
 
         if pandas:
@@ -639,19 +636,19 @@ class TickStore(object):
         t = (dt.now() - start).total_seconds()
         ticks = len(buckets) * self._chunk_size
         rate = int(ticks / t) if t != 0 else float("nan")
-        logger.debug("%d buckets in %s: approx %s ticks/sec" % (len(buckets), t, rate))
+        logger.debug(f"{len(buckets)} buckets in {t}: approx {rate} ticks/sec")
 
     def _pandas_to_buckets(self, x, symbol, initial_image):
         rtn = []
         for i in range(0, len(x), self._chunk_size):
-            bucket, initial_image = TickStore._pandas_to_bucket(x[i : i + self._chunk_size], symbol, initial_image)
+            bucket, initial_image = TickStore._pandas_to_bucket(x[i: i + self._chunk_size], symbol, initial_image)
             rtn.append(bucket)
         return rtn
 
     def _to_buckets(self, x, symbol, initial_image):
         rtn = []
         for i in range(0, len(x), self._chunk_size):
-            bucket, initial_image = TickStore._to_bucket(x[i : i + self._chunk_size], symbol, initial_image)
+            bucket, initial_image = TickStore._to_bucket(x[i: i + self._chunk_size], symbol, initial_image)
             rtn.append(bucket)
         return rtn
 
@@ -678,7 +675,7 @@ class TickStore(object):
         elif dtype.kind == "U":
             return "U%d" % (dtype.itemsize / 4)
         else:
-            raise UnhandledDtypeException("Bad dtype '%s'" % dtype)
+            raise UnhandledDtypeException(f"Bad dtype '{dtype}'")
 
     @staticmethod
     def _ensure_supported_dtypes(array):
@@ -700,7 +697,7 @@ class TickStore(object):
                 raise UnhandledDtypeException("Only unicode and utf8 strings are supported.")
         else:
             raise UnhandledDtypeException(
-                "Unsupported dtype '%s' - only int64, float64 and U are supported" % array.dtype
+                f"Unsupported dtype '{array.dtype}' - only int64, float64 and U are supported"
             )
         # Everything is little endian in tickstore
         if array.dtype.byteorder != "<":
@@ -783,7 +780,7 @@ class TickStore(object):
                         v = TickStore._to_ms(v)
                         if data[k][-1] > v:
                             raise UnorderedDataException(
-                                "Timestamps out-of-order: %s > %s" % (ms_to_datetime(data[k][-1]), t)
+                                f"Timestamps out-of-order: {ms_to_datetime(data[k][-1])} > {t}"
                             )
                     data[k].append(v)
                 except KeyError:
@@ -806,7 +803,7 @@ class TickStore(object):
         if initial_image:
             image_start = initial_image.get("index", start)
             if image_start > start:
-                raise UnorderedDataException("Image timestamp is after first tick: %s > %s" % (image_start, start))
+                raise UnorderedDataException(f"Image timestamp is after first tick: {image_start} > {start}")
             start = min(start, image_start)
             rtn[IMAGE_DOC] = {IMAGE_TIME: image_start, IMAGE: initial_image}
         rtn[END] = end
@@ -827,7 +824,7 @@ class TickStore(object):
             {SYMBOL: symbol}, projection={ID: 0, END: 1}, sort=[(START, pymongo.DESCENDING)]
         )
         if res is None:
-            raise NoDataFoundException("No Data found for {}".format(symbol))
+            raise NoDataFoundException(f"No Data found for {symbol}")
         return utc_dt_to_local_dt(res[END])
 
     def min_date(self, symbol):
@@ -843,5 +840,5 @@ class TickStore(object):
             {SYMBOL: symbol}, projection={ID: 0, START: 1}, sort=[(START, pymongo.ASCENDING)]
         )
         if res is None:
-            raise NoDataFoundException("No Data found for {}".format(symbol))
+            raise NoDataFoundException(f"No Data found for {symbol}")
         return utc_dt_to_local_dt(res[START])

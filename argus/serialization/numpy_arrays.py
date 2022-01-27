@@ -39,7 +39,7 @@ METADATA = "md"
 LENGTHS = "ln"
 
 
-class FrameConverter(object):
+class FrameConverter:
     """
     Converts a Pandas Dataframe to and from PyMongo SON representation:
 
@@ -88,9 +88,9 @@ class FrameConverter(object):
         type_ = infer_dtype(a, skipna=False)
         if type_ in ["unicode", "string"]:
             max_len = max_len_string_array(a)
-            return a.astype("U{:d}".format(max_len)), mask
+            return a.astype(f"U{max_len:d}"), mask
         else:
-            raise ValueError("Cannot store arrays with {} dtype".format(type_))
+            raise ValueError(f"Cannot store arrays with {type_} dtype")
 
     def docify(self, df):
         """
@@ -119,7 +119,7 @@ class FrameConverter(object):
                 arrays.append(arr.tostring())
             except Exception as e:
                 typ = infer_dtype(df[c], skipna=False)
-                msg = "Column '{}' type is {}".format(str(c), typ)
+                msg = f"Column '{str(c)}' type is {typ}"
                 logging.warning(msg)
                 raise e
 
@@ -148,7 +148,7 @@ class FrameConverter(object):
             if col not in doc[METADATA][LENGTHS]:
                 d = np.array(np.nan)
             else:
-                d = decompress(doc[DATA][doc[METADATA][LENGTHS][col][0] : doc[METADATA][LENGTHS][col][1] + 1])
+                d = decompress(doc[DATA][doc[METADATA][LENGTHS][col][0]: doc[METADATA][LENGTHS][col][1] + 1])
                 # d is ready-only but that's not an issue since DataFrame will copy the data anyway.
                 d = np.frombuffer(d, doc[METADATA][DTYPE][col])
 

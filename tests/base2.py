@@ -232,14 +232,14 @@ class TestServerV2(Workspace):
                     % (interval, ((retry_limit + 1) - retry_count), retry_limit)
                 )
                 if self.check_server_up():
-                    log.debug("waited %s for server to start successfully" % str(datetime.now() - start_time))
+                    log.debug(f"waited {str(datetime.now() - start_time)} for server to start successfully")
                     return
 
                 time.sleep(interval)
                 retry_count -= 1
             interval *= base
 
-        raise ValueError("Server failed to start up after waiting %s. Giving up!" % str(datetime.now() - start_time))
+        raise ValueError(f"Server failed to start up after waiting {str(datetime.now() - start_time)}. Giving up!")
 
     def _get_hostname(self):
         """

@@ -36,7 +36,7 @@ def _to_primitive(arr, string_max_len=None, forced_dtype=None):
         if forced_dtype is not None:
             casted_arr = arr.astype(dtype=forced_dtype, copy=False)
         elif string_max_len is not None:
-            casted_arr = np.array(arr.astype("U{:d}".format(string_max_len)))
+            casted_arr = np.array(arr.astype(f"U{string_max_len:d}"))
         else:
             casted_arr = np.array(list(arr))
 
@@ -59,12 +59,12 @@ def _multi_index_to_records(index, empty_index):
         if n is None:
             index_names[i] = "level_%d" % count
             count += 1
-            log.info("Level in MultiIndex has no name, defaulting to %s" % index_names[i])
+            log.info(f"Level in MultiIndex has no name, defaulting to {index_names[i]}")
     index_tz = [get_timezone(i.tz) if isinstance(i, DatetimeIndex) and i.tz else None for i in index.levels]
     return ix_vals, index_names, index_tz
 
 
-class PandasSerializer(object):
+class PandasSerializer:
     def _index_to_records(self, df):
         metadata = {}
         index = df.index
@@ -207,11 +207,11 @@ class PandasSerializer(object):
             return False
         else:
             if arr.dtype.hasobject:
-                log.warning("Pandas dataframe %s contains Objects, saving as Blob" % symbol)
+                log.warning(f"Pandas dataframe {symbol} contains Objects, saving as Blob")
                 # Fall-back to saving using Pickle
                 return False
             elif any([len(x[0].shape) for x in arr.dtype.fields.values()]):
-                log.warning("Pandas dataframe %s contains >1 dimensional arrays, saving as Blob" % symbol)
+                log.warning(f"Pandas dataframe {symbol} contains >1 dimensional arrays, saving as Blob")
                 return False
             else:
                 return True

@@ -33,7 +33,7 @@ def main():
     c = MongoClient(get_mongodb_uri(args.host))
 
     if not do_db_auth(args.host, c, args.db if args.db else "admin"):
-        logger.error("Failed to authenticate to '%s'. Check your admin password!" % (args.host))
+        logger.error(f"Failed to authenticate to '{args.host}'. Check your admin password!")
         return
 
     for user in args.users:
@@ -51,16 +51,10 @@ def main():
         c[db].add_user(user, p, read_only=not write_access)
 
         logger.info(
-            "Granted: {user} [{permission}] to {db}".format(
-                user=user, permission="WRITE" if write_access else "READ", db=db
-            )
+            f"Granted: {user} [{'WRITE' if write_access else 'READ'}] to {db}"
         )
         logger.info(
-            "User creds: {db}/{user}/{password}".format(
-                user=user,
-                db=db,
-                password=p,
-            )
+            f"User creds: {db}/{user}/{p}"
         )
 
 

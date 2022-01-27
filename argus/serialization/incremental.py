@@ -29,7 +29,7 @@ class LazyIncrementalSerializer(ABC):
     def __init__(self, serializer, input_data, chunk_size):
         if chunk_size < 1:
             raise ArgusSerializationException(
-                "LazyIncrementalSerializer can't be initialized " "with chunk_size < 1 ({})".format(chunk_size)
+                f"LazyIncrementalSerializer can't be initialized with chunk_size < 1 ({chunk_size})"
             )
         if not serializer:
             raise ArgusSerializationException(
@@ -45,15 +45,18 @@ class LazyIncrementalSerializer(ABC):
     def __len__(self):
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def generator(self):
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def generator_bytes(self):
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def serialize(self):
         pass
 
@@ -88,7 +91,7 @@ class IncrementalPandasToRecArraySerializer(LazyIncrementalSerializer):
             return input_ndtype, False
         type_sym = "S" if input_ndtype.type == np.string_ else "U"
         max_str_len = len(max(self.input_data[fname].astype(type_sym), key=len))
-        str_field_dtype = np.dtype("{}{:d}".format(type_sym, max_str_len)) if max_str_len > 0 else input_ndtype
+        str_field_dtype = np.dtype(f"{type_sym}{max_str_len:d}") if max_str_len > 0 else input_ndtype
         return str_field_dtype, True
 
     def _get_dtype(self):
@@ -103,9 +106,9 @@ class IncrementalPandasToRecArraySerializer(LazyIncrementalSerializer):
 
         # This is the common case, where first row's dtype represents well the whole dataframe's dtype
         if (
-            serialized_dtypes is None
-            or len(self.input_data) == 0
-            or NP_OBJECT_DTYPE not in self.input_data.dtypes.values
+                serialized_dtypes is None
+                or len(self.input_data) == 0
+                or NP_OBJECT_DTYPE not in self.input_data.dtypes.values
         ):
             return first_chunk, serialized_dtypes, False
 

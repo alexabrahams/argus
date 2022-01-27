@@ -41,7 +41,7 @@ def register_versioned_storage(storageClass):
     return storageClass
 
 
-class VersionStore(object):
+class VersionStore:
     _bson_handler = PickleStore()
 
     @classmethod
@@ -61,7 +61,7 @@ class VersionStore(object):
             enable_sharding(argus_lib.argus, argus_lib.get_name(), hashed=hashed)
         except OperationFailure as e:
             logger.warning(
-                "Library created, but couldn't enable sharding: %s. This is OK if you're not 'admin'" % str(e)
+                f"Library created, but couldn't enable sharding: {str(e)}. This is OK if you're not 'admin'"
             )
 
     @mongo_retry
@@ -117,12 +117,8 @@ class VersionStore(object):
         return VersionStore.__init__(self, state["argus_lib"])
 
     def __str__(self):
-        return """<%s at %s>
-%s""" % (
-            self.__class__.__name__,
-            hex(id(self)),
-            indent(str(self._argus_lib), 4),
-        )
+        return f"""<{self.__class__.__name__} at {hex(id(self))}>
+{indent(str(self._argus_lib), 4)}"""
 
     def __repr__(self):
         return str(self)
@@ -167,7 +163,7 @@ class VersionStore(object):
             try:
                 query["parent"] = self._snapshots.find_one({"name": snapshot})["_id"]
             except TypeError:
-                raise NoDataFoundException("No snapshot %s in library %s" % (snapshot, self._argus_lib.get_name()))
+                raise NoDataFoundException(f"No snapshot {snapshot} in library {self._argus_lib.get_name()}")
         elif all_symbols:
             return self._versions.find(query).distinct("symbol")
 
@@ -266,7 +262,7 @@ class VersionStore(object):
             try:
                 query["parent"] = self._snapshots.find_one({"name": snapshot})["_id"]
             except TypeError:
-                raise NoDataFoundException("No snapshot %s in library %s" % (snapshot, self._argus_lib.get_name()))
+                raise NoDataFoundException(f"No snapshot {snapshot} in library {self._argus_lib.get_name()}")
 
         versions = []
         snapshots = {ss.get("_id"): ss.get("name") for ss in self._snapshots.find()}
@@ -274,7 +270,7 @@ class VersionStore(object):
             query["symbol"] = symbol
             seen_symbols = set()
             for version in self._versions.find(
-                query, projection=["symbol", "version", "parent", "metadata.deleted"], sort=[("version", -1)]
+                    query, projection=["symbol", "version", "parent", "metadata.deleted"], sort=[("version", -1)]
             ):
                 if latest_only and version["symbol"] in seen_symbols:
                     continue
@@ -326,7 +322,7 @@ class VersionStore(object):
                 handler = h
                 break
             if self._with_strict_handler_match and self.handler_can_write_type(h, data):
-                raise ArgusException("Not falling back to default handler for %s" % symbol)
+                raise ArgusException(f"Not falling back to default handler for {symbol}")
         if handler is None:
             version["type"] = "default"
             handler = self._bson_handler
@@ -437,16 +433,16 @@ class VersionStore(object):
 
     def _do_read(self, symbol, version, from_version=None, **kwargs):
         if version.get("deleted"):
-            raise NoDataFoundException("No data found for %s in library %s" % (symbol, self._argus_lib.get_name()))
+            raise NoDataFoundException(f"No data found for {symbol} in library {self._argus_lib.get_name()}")
         handler = self._read_handler(version, symbol)
         # We don't push the date_range check in the handler's code, since the "_with_strict_handler_match"
         #    value is configured on a per-library basis, and is part of the VersionStore instance.
         if (
-            self._with_strict_handler_match
-            and kwargs.get("date_range")
-            and not self.handler_supports_read_option(handler, "date_range")
+                self._with_strict_handler_match
+                and kwargs.get("date_range")
+                and not self.handler_supports_read_option(handler, "date_range")
         ):
-            raise ArgusException("Date range arguments not supported by handler in %s" % symbol)
+            raise ArgusException(f"Date range arguments not supported by handler in {symbol}")
 
         data = handler.read(self._argus_lib, version, symbol, from_version=from_version, **kwargs)
         return VersionedItem(
@@ -523,12 +519,12 @@ class VersionStore(object):
             _version = versions_coll.find_one({"symbol": symbol, "version": as_of})
 
         if not _version:
-            raise NoDataFoundException("No data found for %s in library %s" % (symbol, self._argus_lib.get_name()))
+            raise NoDataFoundException(f"No data found for {symbol} in library {self._argus_lib.get_name()}")
 
         # if the item has been deleted, don't return any metadata
         metadata = _version.get("metadata", None)
         if metadata is not None and metadata.get("deleted", False) is True:
-            raise NoDataFoundException("No data found for %s in library %s" % (symbol, self._argus_lib.get_name()))
+            raise NoDataFoundException(f"No data found for {symbol} in library {self._argus_lib.get_name()}")
 
         return _version
 
@@ -629,7 +625,7 @@ class VersionStore(object):
                 self._argus_lib, version, symbol, data, previous_version, dirty_append=dirty_append, **kwargs
             )
         else:
-            raise Exception("Append not implemented for handler %s" % handler)
+            raise Exception(f"Append not implemented for handler {handler}")
 
         if prune_previous_version and previous_version:
             # Does not allow prune to remove the base of the new version
@@ -718,11 +714,11 @@ class VersionStore(object):
         # It is dangerous because if it deletes the version at the last_look, the segments added by the
         # append are dangling (if prune_previous_version is False) and can cause potentially corruption.
         constraints = (
-            new_version
-            and reference_version
-            and new_version["symbol"] == reference_version["symbol"]
-            and new_version["_id"] != reference_version["_id"]
-            and new_version["base_version_id"]
+                new_version
+                and reference_version
+                and new_version["symbol"] == reference_version["symbol"]
+                and new_version["_id"] != reference_version["_id"]
+                and new_version["base_version_id"]
         )
         assert constraints
         # There is always a small risk here another process in between these two calls (above/below)
@@ -972,7 +968,7 @@ class VersionStore(object):
         """
         version = self._versions.find_one({"symbol": symbol, "version": version_num})
         if not version:
-            logger.error("Can't delete %s:%s as not found in DB" % (symbol, version_num))
+            logger.error(f"Can't delete {symbol}:{version_num} as not found in DB")
             return
         # If the version is pointed to by a snapshot, then can't delete
         if version.get("parent", None):
@@ -981,7 +977,7 @@ class VersionStore(object):
                 if snap_name:
                     snap_name = snap_name["name"]
                 logger.error(
-                    "Can't delete: %s:%s as pointed to by snapshot: %s" % (symbol, version["version"], snap_name)
+                    f"Can't delete: {symbol}:{version['version']} as pointed to by snapshot: {snap_name}"
                 )
                 return
         self._versions.delete_one({"_id": version["_id"]})
@@ -1009,7 +1005,7 @@ class VersionStore(object):
         symbol : `str`
             symbol name to delete
         """
-        logger.info("Deleting data item: %r from %r" % (symbol, self._argus_lib.get_name()))
+        logger.info(f"Deleting data item: {symbol!r} from {self._argus_lib.get_name()!r}")
         # None is the magic sentinel value that indicates an item has been deleted.
         sentinel = self.write(symbol, None, prune_previous_version=False, metadata={"deleted": True})
         self._prune_previous_versions(symbol, 0)
@@ -1058,7 +1054,7 @@ class VersionStore(object):
         # Ensure the user doesn't insert duplicates
         snapshot = self._snapshots.find_one({"name": snap_name})
         if snapshot:
-            raise DuplicateSnapshotException("Snapshot '%s' already exists." % snap_name)
+            raise DuplicateSnapshotException(f"Snapshot '{snap_name}' already exists.")
 
         # Create a snapshot version document
         snapshot = {"_id": bson.ObjectId()}
@@ -1094,7 +1090,7 @@ class VersionStore(object):
         """
         snapshot = self._snapshots.find_one({"name": snap_name})
         if not snapshot:
-            raise NoDataFoundException("Snapshot %s not found!" % snap_name)
+            raise NoDataFoundException(f"Snapshot {snap_name} not found!")
 
         # Remove the snapshot Id as a parent of versions
         self._versions.update_many({"parent": snapshot["_id"]}, {"$pull": {"parent": snapshot["_id"]}})
@@ -1163,7 +1159,7 @@ class VersionStore(object):
         versions_coll = chunks_coll.versions
 
         for symbol in chunks_coll.distinct("symbol"):
-            logger.debug("Checking %s (forward pointers)" % symbol)
+            logger.debug(f"Checking {symbol} (forward pointers)")
 
             all_symbol_pointers_cfgs = _get_symbol_pointer_cfgs(symbol, versions_coll)
 
@@ -1173,7 +1169,7 @@ class VersionStore(object):
                 all_symbol_shas = set(chunks_coll.distinct("sha", {"symbol": symbol}))
                 unreachable_shas = all_symbol_shas - symbol_alive_shas
 
-                logger.info("Cleaning up {} SHAs for symbol {}".format(len(unreachable_shas), symbol))
+                logger.info(f"Cleaning up {len(unreachable_shas)} SHAs for symbol {symbol}")
                 if not dry_run:
                     # Be liberal with the generation time.
                     id_time_constraint = {"$lt": bson.ObjectId.from_datetime(dt.now() - timedelta(days=1))}
@@ -1197,9 +1193,9 @@ class VersionStore(object):
         chunks_coll = lib._collection
         versions_coll = chunks_coll.versions
 
-        logger.info("ORPHANED CHUNK CHECK: %s" % self._argus_lib.get_name())
+        logger.info(f"ORPHANED CHUNK CHECK: {self._argus_lib.get_name()}")
         for symbol in chunks_coll.distinct("symbol"):
-            logger.debug("Checking %s" % symbol)
+            logger.debug(f"Checking {symbol}")
             # Be liberal with the generation time.
             gen_time = dt.now() - timedelta(days=1)
             parent_id_constraint = {"$lt": bson.ObjectId.from_datetime(gen_time)}
@@ -1220,14 +1216,14 @@ class VersionStore(object):
 
             leaked_versions = sorted(parent_ids - versions)
             if len(leaked_versions):
-                logger.info("%s leaked %d versions" % (symbol, len(leaked_versions)))
+                logger.info(f"{symbol} leaked {len(leaked_versions)} versions")
             for x in leaked_versions:
                 chunk_count = mongo_count(chunks_coll, filter={"symbol": symbol, "parent": x})
                 logger.info(
-                    "%s: Missing Version %s (%s) ; %s chunks ref'd" % (symbol, x.generation_time, x, chunk_count)
+                    f"{symbol}: Missing Version {x.generation_time} ({x}) ; {chunk_count} chunks ref'd"
                 )
                 if versions_coll.find_one({"symbol": symbol, "_id": x}) is not None:
-                    raise Exception("Error: version (%s) is found for (%s), but shouldn't be!" % (x, symbol))
+                    raise Exception(f"Error: version ({x}) is found for ({symbol}), but shouldn't be!")
             # Now cleanup the leaked versions
             if not dry_run:
                 # This is now able to handle safely symbols which have both forward and legacy/parent pointers
@@ -1243,7 +1239,7 @@ class VersionStore(object):
         versions_coll = lib._collection.versions
         snapshots_coll = lib._collection.snapshots
 
-        logger.info("ORPHANED SNAPSHOT CHECK: %s" % self._argus_lib.get_name())
+        logger.info(f"ORPHANED SNAPSHOT CHECK: {self._argus_lib.get_name()}")
 
         # Be liberal with the generation time.
         gen_time = dt.now() - timedelta(days=1)
@@ -1265,12 +1261,12 @@ class VersionStore(object):
 
         leaked_snaps = sorted(parent_ids - snapshots)
         if len(leaked_snaps):
-            logger.info("leaked %d snapshots" % (len(leaked_snaps)))
+            logger.info(f"leaked {len(leaked_snaps)} snapshots")
         for x in leaked_snaps:
             ver_count = mongo_count(versions_coll, filter={"parent": x})
-            logger.info("Missing Snapshot %s (%s) ; %s versions ref'd" % (x.generation_time, x, ver_count))
+            logger.info(f"Missing Snapshot {x.generation_time} ({x}) ; {ver_count} versions ref'd")
             if snapshots_coll.find_one({"_id": x}) is not None:
-                raise Exception("Error: snapshot (%s) is found, but shouldn't be!" % (x))
+                raise Exception(f"Error: snapshot ({x}) is found, but shouldn't be!")
             # Now cleanup the leaked snapshots
             if not dry_run:
                 versions_coll.update_many({"parent": x}, {"$pull": {"parent": x}})

@@ -711,7 +711,7 @@ def test_read_unicode_strings(tickstore_lib):
 
 
 def test_objects_fail(tickstore_lib):
-    class Fake(object):
+    class Fake:
         def __init__(self, val):
             self.val = val
 

@@ -1,7 +1,5 @@
 import time
 
-from six.moves import xrange
-
 import argus._compression as aclz4
 from argus import Argus
 from argus.asynchronous import ASYNC_ARGUS, async_argus_submit, async_wait_requests
@@ -56,7 +54,7 @@ def async_bench(num_requests, num_chunks):
     data = get_cached_random_df(num_chunks)
     lib = a[library_name]
     requests = [
-        async_argus_submit(lib, lib.write, True, symbol="sym_{}".format(x), data=data) for x in xrange(num_requests)
+        async_argus_submit(lib, lib.write, True, symbol=f"sym_{x}", data=data) for x in range(num_requests)
     ]
     async_wait_requests(requests, do_raise=True)
 
@@ -64,8 +62,8 @@ def async_bench(num_requests, num_chunks):
 def serial_bench(num_requests, num_chunks):
     data = get_cached_random_df(num_chunks)
     lib = a[library_name]
-    for x in xrange(num_requests):
-        lib.write(symbol="sym_{}".format(x), data=data)
+    for x in range(num_requests):
+        lib.write(symbol=f"sym_{x}", data=data)
 
 
 def run_scenario(result_text, rounds, num_requests, num_chunks, parallel_lz4, use_async, async_argus_pool_workers=None):
@@ -73,7 +71,7 @@ def run_scenario(result_text, rounds, num_requests, num_chunks, parallel_lz4, us
     if async_argus_pool_workers is not None:
         ASYNC_ARGUS.reset(pool_size=int(async_argus_pool_workers), timeout=10)
     measurements = []
-    for curr_round in xrange(rounds):
+    for curr_round in range(rounds):
         # print("Running round {}".format(curr_round))
         clean_lib()
         start = time.time()

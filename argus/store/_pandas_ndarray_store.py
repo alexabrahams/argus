@@ -8,7 +8,7 @@ from pandas import DataFrame, Series
 try:
     from pandas import Panel
 except ImportError:
-    Panel=None
+    Panel = None
 
 from argus._util import NP_OBJECT_DTYPE
 from argus.serialization.numpy_records import SeriesSerializer, DataFrameSerializer

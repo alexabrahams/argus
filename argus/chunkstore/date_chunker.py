@@ -146,7 +146,7 @@ class DateChunker(Chunker):
             return data[
                 (data.index.get_level_values("date") < range_obj.start)
                 | (data.index.get_level_values("date") > range_obj.end)
-            ]
+                ]
         elif "date" in data.columns:
             return data[(data.date < range_obj.start) | (data.date > range_obj.end)]
         else:

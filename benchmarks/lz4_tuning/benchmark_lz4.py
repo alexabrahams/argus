@@ -112,7 +112,7 @@ def print_results(n_threads, chunk_size, n_chunks, total_mb, measurements, compa
         np.min(measurements),
         np.max(measurements),
         np.std(measurements),
-        ("{:.2f}x faster than single threaded".format(xfaster) if xfaster > 1 else ""),
+        (f"{xfaster:.2f}x faster than single threaded" if xfaster > 1 else ""),
     )
     print(
         "(x{:<3}threads) ({:.1f} MB/chunk, x{:<4} chunks, total {:.1f} MB) \t "

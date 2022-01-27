@@ -28,18 +28,18 @@ class ProcessStillRunningException(Exception):
 
 @retry(ProcessStillRunningException, tries=KILL_RETRY_COUNT, delay=KILL_RETRY_WAIT_SECS)
 def _kill_all(procs, sig):
-    log.debug("Killing %d processes with signal %s" % (len(procs), sig))
+    log.debug(f"Killing {len(procs)} processes with signal {sig}")
     for p in procs:
         p.send_signal(sig)
 
-    log.debug("Waiting for %d processes to die" % len(procs))
+    log.debug(f"Waiting for {len(procs)} processes to die")
     gone, alive = psutil.wait_procs(procs, timeout=KILL_WAIT_SECS)
 
     if len(alive) == 0:
         log.debug("All processes are terminated")
         return
 
-    log.warning("%d processes remainings: %s" % (len(alive), ",".join([p.name() for p in alive])))
+    log.warning(f"{len(alive)} processes remainings: {','.join([p.name() for p in alive])}")
     raise ProcessStillRunningException()
 
 
@@ -80,8 +80,8 @@ class ThreadServer(ServerClass):
         print(self._cwd)
 
         self._proc = subprocess.Popen(run_cmd) #, env=self._env, cwd=self._cwd
-        log.debug("Running server: %s" % " ".join(run_cmd))
-        log.debug("CWD: %s" % self._cwd)
+        log.debug(f"Running server: {' '.join(run_cmd)}")
+        log.debug(f"CWD: {self._cwd}")
 
         if debug:
             ProcessReader(self._proc, self._proc.stdout, False).start()

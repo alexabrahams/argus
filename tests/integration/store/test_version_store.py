@@ -80,7 +80,7 @@ from pymongo.message import query as __query
 def _query(allow_secondary, library_name):
     def _internal_query(options, *args, **kwargs):
         coll_name = args[0]
-        data_coll_name = "argus_{}".format(library_name)
+        data_coll_name = f"argus_{library_name}"
         versions_coll_name = data_coll_name + ".versions"
         if allow_secondary and coll_name in (data_coll_name, versions_coll_name):
             # Reads to the Version and Chunks collections are allowed to slaves
@@ -89,7 +89,7 @@ def _query(allow_secondary, library_name):
             )
         elif ".$cmd" not in coll_name:
             # All other collections we force PRIMARY read.
-            assert bool(options & _QUERY_OPTIONS["slave_okay"]) == False, "{}: options:{}".format(coll_name, options)
+            assert bool(options & _QUERY_OPTIONS["slave_okay"]) == False, f"{coll_name}: options:{options}"
         return __query(options, *args, **kwargs)
 
     return _internal_query
@@ -158,7 +158,7 @@ def _test_query_falls_back_to_primary(library_secondary, library_name, fw_pointe
             # We should attempt a call to primary only subsequently.
             # In newer MongoDBs we query <database>.$cmd rather than <database>.<collection>
             if (
-                    args[0].startswith("argus_{}.".format(library_name.split(".")[0]))
+                    args[0].startswith(f"argus_{library_name.split('.')[0]}.")
                     and bool(options & _QUERY_OPTIONS["slave_okay"]) == True
             ):
                 allow_secondary[0] = False
@@ -402,7 +402,7 @@ def test_list_version(library, fw_pointers_cfg):
         assert len(list(library.list_versions(symbol))) == 0
         dates = [None, None, None]
         now = dt.utcnow().replace(tzinfo=mktz("UTC"))
-        for x in six.moves.xrange(len(dates)):
+        for x in six.moves.range(len(dates)):
             dates[x] = now - dtd(minutes=130 - x)
             with patch("bson.ObjectId", return_value=bson.ObjectId.from_datetime(dates[x])):
                 library.write(symbol, ts1, prune_previous_version=False)
@@ -442,7 +442,7 @@ def test_list_version_latest_only(library):
     assert len(list(library.list_versions(symbol))) == 0
     dates = [None, None, None]
     now = dt.utcnow().replace(tzinfo=mktz("UTC"))
-    for x in six.moves.xrange(len(dates)):
+    for x in six.moves.range(len(dates)):
         dates[x] = now - dtd(minutes=20 - x)
         with patch("bson.ObjectId", return_value=bson.ObjectId.from_datetime(dates[x])):
             library.write(symbol, ts1, prune_previous_version=False)
@@ -1856,7 +1856,7 @@ def test_fwpointers_mixed_scenarios(library, write_cfg, read_cfg, append_cfg, re
             raise pymongo.errors.OperationFailure("Failed to write all the chunks. Mocked failure.")
         orig_check_written(collection, symbol, version)
 
-    symbol = "sym/{}/{}/{}/{}".format(write_cfg, read_cfg, append_cfg, reread_cfg)
+    symbol = f"sym/{write_cfg}/{read_cfg}/{append_cfg}/{reread_cfg}"
     mydf = _mixed_test_data()["small"][0]
     to_write = mydf[: len(mydf) // 2]
     to_append = mydf[len(mydf) // 2:]
@@ -1964,7 +1964,7 @@ def test_version_argus_version(argus):
         library = argus[lib_name]
         for i in range(3):
             vs.ARGUS_VERSION_NUMERICAL = i
-            library.write(symbol=symbol, data="hello world {}".format(i), prune_previous_version=False)
+            library.write(symbol=symbol, data=f"hello world {i}", prune_previous_version=False)
         assert library.get_argus_version(symbol) == 2
         assert library.get_argus_version(symbol, as_of=1) == 0
     finally:

@@ -10,7 +10,7 @@ class AsyncRequestType(Enum):
     ACCESSOR = "accessor"
 
 
-class AsyncRequest(object):
+class AsyncRequest:
     def __init__(self, kind, library, fun, callback, *args, **kwargs):
         self.id = uuid.uuid4()
 
@@ -43,7 +43,7 @@ class AsyncRequest(object):
     def execution_duration(self):
         if None in (self.start_time, self.end_time):
             raise RequestDurationException(
-                "{} can't provide an execution_duration {}.".format(self, (self.start_time, self.end_time))
+                f"{self} can't provide an execution_duration {self.start_time, self.end_time}."
             )
         return self.end_time - self.start_time
 
@@ -51,7 +51,7 @@ class AsyncRequest(object):
     def schedule_delay(self):
         if None in (self.start_time, self.create_time):
             raise RequestDurationException(
-                "{} can't provide a schedule_delay {}.".format(self, (self.start_time, self.create_time))
+                f"{self} can't provide a schedule_delay {self.start_time, self.create_time}."
             )
         return self.start_time - self.create_time
 
@@ -59,7 +59,7 @@ class AsyncRequest(object):
     def total_time(self):
         if None in (self.end_time, self.create_time):
             raise RequestDurationException(
-                "{} can't provide a total_time {}.".format(self, (self.end_time, self.create_time))
+                f"{self} can't provide a total_time {self.end_time, self.create_time}."
             )
         return self.end_time - self.create_time
 

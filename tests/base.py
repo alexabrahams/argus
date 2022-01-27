@@ -147,11 +147,11 @@ class ServerThread(threading.Thread):
             ProcessReader(self.p, self.p.stderr, True).start()
 
     def run(self):
-        log.debug("Running server: %s" % " ".join(self.run_cmd))
-        log.debug("CWD: %s" % self.cwd)
+        log.debug(f"Running server: {' '.join(self.run_cmd)}")
+        log.debug(f"CWD: {self.cwd}")
         try:
             if self.run_stdin:
-                log.debug("STDIN: %s" % self.run_stdin)
+                log.debug(f"STDIN: {self.run_stdin}")
                 self.p.stdin.write(self.run_stdin.encode("utf-8"))
             if self.p.stdin:
                 self.p.stdin.close()
@@ -278,18 +278,18 @@ class TestServer(Workspace):
                     % (interval, ((retry_limit + 1) - retry_count), retry_limit)
                 )
                 if self.check_server_up():
-                    log.debug("waited %s for server to start successfully" % str(datetime.now() - start_time))
+                    log.debug(f"waited {str(datetime.now() - start_time)} for server to start successfully")
                     return
 
                 time.sleep(interval)
                 retry_count -= 1
             interval *= base
 
-        raise ValueError("Server failed to start up after waiting %s. Giving up!" % str(datetime.now() - start_time))
+        raise ValueError(f"Server failed to start up after waiting {str(datetime.now() - start_time)}. Giving up!")
 
     def start_server(self, env=None):
         """Start the server instance."""
-        log.debug("Starting Server on host %s port %s" % (self.hostname, self.port))
+        log.debug(f"Starting Server on host {self.hostname} port {self.port}")
         self.server = self.serverclass(
             self.hostname, self.port, self.run_cmd, self.run_stdin, env=getattr(self, "env", env), cwd=self.cwd
         )
@@ -299,10 +299,10 @@ class TestServer(Workspace):
         self.dead = False
 
     def _find_and_kill(self, retries, signal):
-        log.debug("Killing server running at {}:{} using signal {}".format(self.hostname, self.port, signal))
+        log.debug(f"Killing server running at {self.hostname}:{self.port} using signal {signal}")
         for _ in range(retries):
             if OSX:
-                netstat_cmd = "lsof -n -i:{} | grep LISTEN | awk '{{ print $2 }}'".format(self.port)
+                netstat_cmd = f"lsof -n -i:{self.port} | grep LISTEN | awk '{{ print $2 }}'"
             else:
                 netstat_cmd = (
                     "netstat -anp 2>/dev/null | grep %s:%s | grep LISTEN | "
@@ -324,7 +324,7 @@ class TestServer(Workspace):
                         os.kill(pid, signal)
                     except OSError as oe:
                         if oe.errno == errno.ESRCH:  # Process doesn't appear to exist.
-                            log.error("For some reason couldn't find PID {} to kill.".format(p))
+                            log.error(f"For some reason couldn't find PID {p} to kill.")
                         else:
                             raise
             time.sleep(self.kill_retry_delay)

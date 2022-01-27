@@ -9,7 +9,7 @@ from tests.util import get_random_id
 SESSION_ID_LEN = 8
 
 
-class Config(object):
+class Config:
     __slots__ = ()
 
     def __init__(self, **kwargs):
@@ -18,7 +18,7 @@ class Config(object):
     def update(self, cfg):
         for k in cfg:
             if k not in self.__slots__:
-                raise ValueError("Unknown config option: {0}".format(k))
+                raise ValueError(f"Unknown config option: {k}")
             setattr(self, k, cfg[k])
 
 
@@ -33,7 +33,7 @@ def requires_config(cfg, vars_):
         def wrapper(request, *args, **kwargs):
             for var in vars_:
                 if not getattr(cfg, var):
-                    pytest.skip("config variable {0} missing, skipping test".format(var))
+                    pytest.skip(f"config variable {var} missing, skipping test")
             return f(request, *args, **kwargs)
 
         return wrapper
@@ -49,7 +49,7 @@ def yield_requires_config(cfg, vars_):
         def wrapper(*args, **kwargs):
             for var in vars_:
                 if not getattr(cfg, var):
-                    pytest.skip("config variable {0} missing, skipping test".format(var))
+                    pytest.skip(f"config variable {var} missing, skipping test")
             gen = f(*args, **kwargs)
             yield next(gen)
 

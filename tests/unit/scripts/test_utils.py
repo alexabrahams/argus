@@ -76,7 +76,7 @@ def test_do_db_auth_admin_user_creds_fails():
         assert not do_db_auth("hostname", connection, "argus_user")
 
     assert get_auth.call_args_list == [call("hostname", "admin", "admin"), call("hostname", "argus", "argus_user")]
-    logger.error.assert_called_once_with("Failed to authenticate to '%s' as Admin. Giving up." % ("hostname"))
+    logger.error.assert_called_once_with(f"Failed to authenticate to '{'hostname'}' as Admin. Giving up.")
 
 
 def test_do_db_auth_role():

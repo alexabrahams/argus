@@ -48,11 +48,11 @@ def register_library_type(name, type_):
     Register a Argus Library Type handler
     """
     if name in LIBRARY_TYPES:
-        raise ArgusException("Library %s already registered as %s" % (name, LIBRARY_TYPES[name]))
+        raise ArgusException(f"Library {name} already registered as {LIBRARY_TYPES[name]}")
     LIBRARY_TYPES[name] = type_
 
 
-class Argus(object):
+class Argus:
     """
     The Argus class is a top-level God object, owner of all argus_<user> databases
     accessible in Mongo.
@@ -78,14 +78,14 @@ class Argus(object):
     __conn = None
 
     def __init__(
-        self,
-        mongo_host,
-        app_name=APPLICATION_NAME,
-        allow_secondary=False,
-        socketTimeoutMS=10 * 60 * 1000,
-        connectTimeoutMS=2 * 1000,
-        serverSelectionTimeoutMS=30 * 1000,
-        **kwargs,
+            self,
+            mongo_host,
+            app_name=APPLICATION_NAME,
+            allow_secondary=False,
+            socketTimeoutMS=10 * 60 * 1000,
+            connectTimeoutMS=2 * 1000,
+            serverSelectionTimeoutMS=30 * 1000,
+            **kwargs,
     ):
         """
         Constructs a Argus Datastore.
@@ -133,7 +133,7 @@ class Argus(object):
             self.__conn = mongo_host
             # Workaround for: https://jira.mongodb.org/browse/PYTHON-927
             mongo_host.server_info()
-            self.mongo_host = ",".join(["{}:{}".format(x[0], x[1]) for x in mongo_host.nodes])
+            self.mongo_host = ",".join([f"{x[0]}:{x[1]}" for x in mongo_host.nodes])
             self._adminDB = self._conn.admin
             self._cache = Cache(self._conn)
 
@@ -155,7 +155,7 @@ class Argus(object):
 
             if self.__conn is None:
                 host = get_mongodb_uri(self.mongo_host)
-                logger.info("Connecting to mongo: {0} ({1})".format(self.mongo_host, host))
+                logger.info(f"Connecting to mongo: {self.mongo_host} ({host})")
                 self.__conn = pymongo.MongoClient(
                     host=host,
                     maxPoolSize=self._MAX_CONNS,
@@ -186,11 +186,11 @@ class Argus(object):
                 self.__conn = None
             for _, l in self._library_cache.items():
                 if hasattr(l, "_reset") and callable(l._reset):
-                    logger.debug("Library reset() %s" % l)
+                    logger.debug(f"Library reset() {l}")
                     l._reset()  # the existence of _reset() is not guaranteed/enforced, it also triggers re-auth
 
     def __str__(self):
-        return "<Argus at %s, connected to %s>" % (hex(id(self)), str(self._conn))
+        return f"<Argus at {hex(id(self))}, connected to {str(self._conn)}>"
 
     def __repr__(self):
         return str(self)
@@ -232,7 +232,7 @@ class Argus(object):
             if db.startswith(self.DB_PREFIX + "_"):
                 for coll in self._conn[db].list_collection_names():
                     if coll.endswith(self.METADATA_COLL):
-                        libs.append(db[len(self.DB_PREFIX) + 1 :] + "." + coll[: -1 * len(self.METADATA_COLL) - 1])
+                        libs.append(db[len(self.DB_PREFIX) + 1:] + "." + coll[: -1 * len(self.METADATA_COLL) - 1])
             elif db == self.DB_PREFIX:
                 for coll in self._conn[db].list_collection_names():
                     if coll.endswith(self.METADATA_COLL):
@@ -292,7 +292,7 @@ class Argus(object):
     def _sanitize_lib_name(self, library):
         # For list libraries, we don't return the fully qualified lib name. eg. argus_skhare.test -> skhare.test
         if library.startswith(self.DB_PREFIX + "_"):
-            return library[len(self.DB_PREFIX) + 1 :]
+            return library[len(self.DB_PREFIX) + 1:]
 
         return library
 
@@ -344,12 +344,12 @@ class Argus(object):
         lib = ArgusLibraryBinding(self, library)
         colname = lib.get_top_level_collection().name
         if not [c for c in lib._db.list_collection_names(False) if re.match(r"^{}([\.].*)?$".format(colname), c)]:
-            logger.info("Nothing to delete. Argus library %s does not exist." % colname)
-        logger.info("Dropping collection: %s" % colname)
+            logger.info(f"Nothing to delete. Argus library {colname} does not exist.")
+        logger.info(f"Dropping collection: {colname}")
         lib._db.drop_collection(colname)
         for coll in lib._db.list_collection_names():
             if coll.startswith(colname + "."):
-                logger.info("Dropping collection: %s" % coll)
+                logger.info(f"Dropping collection: {coll}")
                 lib._db.drop_collection(coll)
         if library in self._library_cache:
             del self._library_cache[library]
@@ -379,13 +379,13 @@ class Argus(object):
 
         if error:
             raise LibraryNotFoundException(
-                "Library %s was not correctly initialized in %s.\nReason: %r)" % (library, self, error)
+                f"Library {library} was not correctly initialized in {self}.\nReason: {error!r})"
             )
         elif not lib_type:
-            raise LibraryNotFoundException("Library %s was not correctly initialized in %s." % (library, self))
+            raise LibraryNotFoundException(f"Library {library} was not correctly initialized in {self}.")
         elif lib_type not in LIBRARY_TYPES:
             raise LibraryNotFoundException(
-                "Couldn't load LibraryType '%s' for '%s' (has the class been registered?)" % (lib_type, library)
+                f"Couldn't load LibraryType '{lib_type}' for '{library}' (has the class been registered?)"
             )
         instance = LIBRARY_TYPES[lib_type](lib)
         self._library_cache[library] = instance
@@ -460,7 +460,7 @@ class Argus(object):
         lib = ArgusLibraryBinding(self, from_lib)
         colname = lib.get_top_level_collection().name
 
-        logger.info("Renaming collection: %s" % colname)
+        logger.info(f"Renaming collection: {colname}")
         lib._db[colname].rename(to_colname)
         for coll in lib._db.list_collection_names():
             if coll.startswith(colname + "."):
@@ -486,7 +486,7 @@ class Argus(object):
         return ArgusLibraryBinding(self, lib).get_library_type()
 
 
-class ArgusLibraryBinding(object):
+class ArgusLibraryBinding:
     """
     The ArgusLibraryBinding type holds the binding between the library name and the
     concrete implementation of the library.
@@ -572,7 +572,7 @@ class ArgusLibraryBinding(object):
             authenticate(database, auth.user, auth.password)
 
     def reset_auth(self):
-        logger.debug("reset_auth() %s" % self)
+        logger.debug(f"reset_auth() {self}")
         self._auth(self._db)
 
     def get_name(self):
@@ -658,7 +658,7 @@ class ArgusLibraryBinding(object):
             # This will check every average half-life
             self.quota_countdown = int(max(remaining_count // 2, 1))
         except Exception as e:
-            logger.warning("Encountered an exception while calculating quota statistics: %s" % str(e))
+            logger.warning(f"Encountered an exception while calculating quota statistics: {str(e)}")
 
     def get_library_type(self):
         return self.get_library_metadata(ArgusLibraryBinding.TYPE_FIELD)
