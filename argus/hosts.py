@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 # Application environment variables
 argus_cache = WeakValueDictionary()
 
-
 CONNECTION_STR = re.compile(r"(^\w+\.?\w+)@([^\s:]+:?\w+)$")
 
 

@@ -1,9 +1,9 @@
 import abc
 import logging
 import uuid
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED, FIRST_EXCEPTION
 from threading import RLock, Event
 
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED, FIRST_EXCEPTION
 from six import iteritems, itervalues
 
 from argus._config import ARGUS_ASYNC_NWORKERS

@@ -10,7 +10,6 @@ except ImportError as e:
 
 # ENABLE_PARALLEL mutated in global_scope. Do not remove.
 from ._config import (
-    ENABLE_PARALLEL,
     LZ4_HIGH_COMPRESSION,
     LZ4_WORKERS,
     LZ4_N_PARALLEL,
@@ -19,7 +18,6 @@ from ._config import (
 )  # noqa # pylint: disable=unused-import
 
 logger = logging.getLogger(__name__)
-
 
 _compress_thread_pool = None
 

@@ -13,7 +13,6 @@ from .._compression import compress_array, decompress
 
 # CHECK_CORRUPTION_ON_APPEND used in global scope, do not remove.
 from .._config import (
-    CHECK_CORRUPTION_ON_APPEND,
     FW_POINTERS_CONFIG_KEY,
     FW_POINTERS_REFS_KEY,
     ARGUS_FORWARD_POINTERS_CFG,

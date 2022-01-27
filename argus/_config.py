@@ -1,11 +1,10 @@
 import logging
 import os
-
-import pymongo
 from enum import Enum
 
-logger = logging.getLogger(__name__)
+import pymongo
 
+logger = logging.getLogger(__name__)
 
 # -----------------------------
 # VersionStore configuration
@@ -13,13 +12,11 @@ logger = logging.getLogger(__name__)
 # Controls is the write handler can only match handlers for the specific data type. No fallback to pickling if True.
 STRICT_WRITE_HANDLER_MATCH = bool(os.environ.get("STRICT_WRITE_HANDLER_MATCH"))
 
-
 # -----------------------------
 # NdArrayStore configuration
 # -----------------------------
 # Extra sanity checks for corruption during appends. Introduces a 5-7% performance hit (off by default)
 CHECK_CORRUPTION_ON_APPEND = bool(os.environ.get("CHECK_CORRUPTION_ON_APPEND"))
-
 
 # -----------------------------
 # Serialization configuration
@@ -78,13 +75,11 @@ LZ4_MINSZ_PARALLEL = os.environ.get("LZ4_MINSZ_PARALLEL", 0.5 * 1024 ** 2)  # 0.
 # Enable this when you run the benchmark_lz4.py
 BENCHMARK_MODE = False
 
-
 # ---------------------------
 # Async argus
 # ---------------------------
 # Configures the size of the workers pools used for async argus requests
 ARGUS_ASYNC_NWORKERS = os.environ.get("ARGUS_ASYNC_NWORKERS", 4)
-
 
 # -------------------------------
 # Flag used to convert byte column/index/column names to unicode when read back.

@@ -13,6 +13,12 @@ import numpy as np
 import pandas
 from dateutil.rrule import rrule, DAILY
 from pandas.util.testing import assert_frame_equal
+import string
+import random
+
+
+def get_random_id(id_len):
+    return "".join(random.sample(string.ascii_lowercase + string.digits, id_len))
 
 
 def assert_frame_equal_(df1, df2, check_freq=True, check_names=True):

@@ -1,6 +1,5 @@
 import time
 import uuid
-
 from enum import Enum
 
 from argus.exceptions import RequestDurationException

@@ -94,7 +94,6 @@ setup(
             "argus_list_libraries = argus.scripts.argus_list_libraries:main",
             "argus_delete_library = argus.scripts.argus_delete_library:main",
             "argus_enable_sharding = argus.scripts.argus_enable_sharding:main",
-            "argus_copy_data = argus.scripts.argus_copy_data:main",
             "argus_create_user = argus.scripts.argus_create_user:main",
             "argus_prune_versions = argus.scripts.argus_prune_versions:main",
             "argus_fsck = argus.scripts.argus_fsck:main",

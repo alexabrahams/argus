@@ -50,7 +50,6 @@ try:
 except ImportError as e:
     from lz4 import compress as lz4_compress, compressHC as lz4_compressHC, decompress as lz4_decompress
 
-
 PD_VER = pd.__version__
 logger = logging.getLogger(__name__)
 

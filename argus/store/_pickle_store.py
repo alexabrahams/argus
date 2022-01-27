@@ -10,9 +10,8 @@ from six.moves import cPickle, xrange
 
 from ._version_store_utils import checksum, pickle_compat_load, version_base_or_id
 from .._compression import decompress, compress_array
-from ..exceptions import UnsupportedPickleStoreVersion
 from .._config import SKIP_BSON_ENCODE_PICKLE_STORE, MAX_BSON_ENCODE
-
+from ..exceptions import UnsupportedPickleStoreVersion
 
 # new versions of chunked pickled objects MUST begin with __chunked__
 _MAGIC_CHUNKED = "__chunked__"

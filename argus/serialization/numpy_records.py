@@ -1,12 +1,11 @@
-import six
 import logging
 
 import numpy as np
-from pandas import DataFrame, MultiIndex, Series, DatetimeIndex, Index
 import pandas as pd
+import six
+from pandas import DataFrame, MultiIndex, Series, DatetimeIndex, Index
 
 # Used in global scope, do not remove.
-from .._config import FAST_CHECK_DF_SERIALIZABLE
 from .._util import NP_OBJECT_DTYPE
 from ..exceptions import ArgusException
 
@@ -18,7 +17,6 @@ except ImportError:
         from pandas._libs.tslib import Timestamp, get_timezone
     except ImportError:  # <= 0.19 Compatibility
         from pandas.tslib import Timestamp, get_timezone
-
 
 log = logging.getLogger(__name__)
 PD_VER = pd.__version__

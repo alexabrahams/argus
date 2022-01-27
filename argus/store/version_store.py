@@ -42,7 +42,6 @@ def register_versioned_storage(storageClass):
 
 
 class VersionStore(object):
-
     _bson_handler = PickleStore()
 
     @classmethod

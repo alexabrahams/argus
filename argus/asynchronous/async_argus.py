@@ -1,9 +1,8 @@
 import logging
 import time
 from collections import defaultdict
-from threading import RLock
-
 from concurrent.futures import FIRST_COMPLETED
+from threading import RLock
 
 from ._workers_pool import LazySingletonTasksCoordinator
 from .async_utils import AsyncRequestType, AsyncRequest
@@ -245,7 +244,6 @@ async_shutdown = ASYNC_ARGUS.shutdown
 async_await_termination = ASYNC_ARGUS.await_termination
 async_reset_pool = ASYNC_ARGUS.reset
 async_total_requests = ASYNC_ARGUS.total_pending_requests
-
 
 # def async_modifier(func):
 #     @wraps(func)
