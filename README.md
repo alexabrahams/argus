@@ -3,12 +3,6 @@ Arctic fork to resolve dependencies turned to separate project
 
 ## Quickstart
 
-### Install Argus
-
-``
-pip install git+https://github.com/man-group/argus.git
-``
-
 ### Run a MongoDB
 
 ``
